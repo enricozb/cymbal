@@ -1,0 +1,69 @@
+[rust.queries]
+enum     = "(enum_item name: (type_identifier) @name)"
+struct   = "(struct_item name: (type_identifier) @name)"
+method   = "(declaration_list (function_item name: (identifier) @name))"
+function = "(function_item name: (identifier) @name)"
+impl     = "(impl_item type: (type_identifier) @name)"
+macro    = "(macro_definition name: (identifier) @name)"
+module   = "(mod_item name: (identifier) @name)"
+trait    = "(trait_item name: (type_identifier) @name)"
+type     = "(type_item name: (type_identifier) @name)"
+
+[odin.queries]
+struct   = "(struct_declaration (identifier) @name \"::\")"
+method   = "(procedure_declaration (identifier) @name)"
+type     = "(const_declaration (identifier) @name)"
+module   = " (import_declaration alias: (identifier) @name ) "
+
+[python.queries]
+function = "(function_definition name: (identifier) @name)"
+class = "(class_definition name: (identifier) @name)"
+
+[go.queries]
+# function = [
+#   "entity.name.function.go"
+#   "variable.other.readwrite.declaration.go - meta.block.go"
+# ]
+# type = "entity.name.type.go"
+# const = "variable.other.constant.declaration.go - meta.block.go"
+
+[typescript.queries]
+class = "(class_declaration name: (type_identifier) @name)"
+method = "(method_signature name: (property_identifier) @name)"
+function = [
+  "(function_declaration name: (identifier))",
+  "(program (lexical_declaration (variable_declarator name: (identifier) @name value: (arrow_function))))",
+  "(program (export_statement (lexical_declaration (variable_declarator name: (identifier) @name value: (arrow_function)))))",
+]
+
+[c.queries]
+struct = "(struct_specifier name: (type_identifier) @name)"
+type = [
+  "(declaration type: (union_specifier name: (type_identifier) @name))",
+  "(type_definition declarator: (type_identifier) @name)"
+]
+function = "(function_declarator declarator: (identifier) @name)"
+enum = "(enum_specifier name: (type_identifier) @name)"
+
+[cpp.queries]
+type = [
+  "(type_definition declarator: (type_identifier) @name)",
+  "(enum_specifier name: (type_identifier) @name)",
+]
+class = [
+  "(struct_specifier name: (type_identifier) @name body:(_))",
+  "(declaration type: (union_specifier name: (type_identifier) @name))",
+  "(class_specifier name: (type_identifier) @name)",
+]
+function = [
+  "(function_declarator declarator: (identifier) @name)",
+  "(function_declarator declarator: (field_identifier) @name)",
+]
+method = "(function_declarator declarator: (qualified_identifier scope: (namespace_identifier) name: (identifier) @name))"
+
+[haskell.queries]
+type = [
+  "(type_synomym name: (name) @name)",
+  "(data_type name: (name) @name)",
+]
+function = "(haskell declarations: (declarations (signature name: (variable) @name)))"
