@@ -31,12 +31,10 @@ pub struct Args {
   /// This is the character between the path, location, kind, text, and
   /// leading/trailing text written to stdout.
   #[arg(short, long, default_value_t = '\u{2008}')]
-  pub separator: char,
-  /// The character between symbols.
-  ///
-  /// This is the character between separate symbols.
-  #[arg(short, long, default_value_t = '\0')]
   pub delimiter: char,
+  /// The character between symbols.
+  #[arg(short, long, default_value_t = '\0')]
+  pub separator: char,
   /// Whether to spawn a detached process to index symbols.
   ///
   /// Only useful with the `cache-dir` option.

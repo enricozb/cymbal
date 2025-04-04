@@ -26,7 +26,7 @@ fn main() -> Result<(), anyhow::Error> {
   let num_threads = args.num_threads();
 
   let walker = Walker::spawn(config.extensions(), args.num_threads() * 8)?;
-  let (writer, writer_handle) = Writer::spawn(args.separator, args.delimiter, args.num_threads() * 8)?;
+  let (writer, writer_handle) = Writer::spawn(args.delimiter, args.separator, args.num_threads() * 8)?;
 
   let mut worker_handles = Vec::new();
   for _ in 0..num_threads {

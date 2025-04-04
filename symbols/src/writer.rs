@@ -12,14 +12,14 @@ pub enum Message {
 
 #[derive(Clone)]
 pub struct Writer {
-  separator: char,
   delimiter: char,
+  separator: char,
 
   pub sink: Sender<Message>,
 }
 
 impl Writer {
-  pub fn spawn(separator: char, delimiter: char, capacity: usize) -> Result<(Self, JoinHandle<()>), anyhow::Error> {
+  pub fn spawn(delimiter: char, separator: char, capacity: usize) -> Result<(Self, JoinHandle<()>), anyhow::Error> {
     let (send, recv) = crossbeam::channel::bounded(capacity);
 
     let handle = std::thread::spawn(move || {
@@ -30,8 +30,8 @@ impl Writer {
 
     (
       Self {
-        separator,
         delimiter,
+        separator,
         sink: send,
       },
       handle,
@@ -47,7 +47,7 @@ impl Writer {
     self
       .sink
       .send(Message::Symbol(format!(
-        "{path}{sep}{line}{sep}{col}{sep}{lead}{sep}{text}{sep}{tail}{sep}{kind}{end}",
+        "{path}{dlm}{line}{dlm}{col}{dlm}{lead}{dlm}{text}{dlm}{tail}{dlm}{kind}{end}",
         path = symbol.path,
         line = symbol.span.start.line,
         col = symbol.span.start.column,
@@ -55,8 +55,8 @@ impl Writer {
         text = symbol.text,
         tail = symbol.tail,
         kind = symbol.kind.colored_abbreviation(),
-        sep = self.separator,
-        end = self.delimiter,
+        dlm = self.delimiter,
+        end = self.separator,
       )))
       .context("failed to send message")
   }
