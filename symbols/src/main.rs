@@ -16,12 +16,12 @@ use anyhow::Context;
 use clap::Parser;
 use parking_lot::RwLock;
 
-use crate::{args::Args, walker::Walker, worker::Worker, writer::Writer};
+use crate::{args::Args, ext::Leak, walker::Walker, worker::Worker, writer::Writer};
 
 fn main() -> Result<(), anyhow::Error> {
   let args = Args::parse();
 
-  let config = utils::into_static(args.config()?);
+  let config = args.config()?.leak();
   let cache = Arc::new(RwLock::new(args.cache()?));
   let num_threads = args.num_threads();
 
@@ -36,7 +36,10 @@ fn main() -> Result<(), anyhow::Error> {
   }
 
   for worker_handle in worker_handles {
-    worker_handle.join().expect("join worker").context("failed to join worker")?;
+    worker_handle
+      .join()
+      .expect("join worker")
+      .context("failed to join worker")?;
   }
 
   cache.read().save().context("failed to save cache")?;

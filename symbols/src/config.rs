@@ -1,9 +1,15 @@
 use std::collections::HashMap;
 
+use anyhow::Context;
+use leon::Template as LeonTemplate;
 use serde::{de::Error, Deserialize, Deserializer};
-use tree_sitter::{Language as TreeSitterLanguage, Query};
+use tree_sitter::{Language as TreeSitterLanguage, Query as TreeSitterQuery, QueryMatch};
 
-use crate::{ext::OptionExt, symbol::Kind as SymbolKind, utils::OneOrMany};
+use crate::{
+  ext::{OptionExt, ResultExt},
+  symbol::Kind as SymbolKind,
+  utils::OneOrMany,
+};
 
 static DEFAULT_CONFIG: &str = include_str!("../default-config.toml");
 
@@ -37,6 +43,35 @@ pub struct LanguageConfig {
   pub transforms: HashMap<SymbolKind, ()>,
 }
 
+pub struct Query {
+  pub ts_query: TreeSitterQuery,
+  pub leading: Option<Template>,
+  pub trailing: Option<Template>,
+}
+
+#[derive(Default)]
+pub struct Template {
+  pub idx_to_name: HashMap<u32, String>,
+  pub template: LeonTemplate<'static>,
+}
+
+impl Template {
+  pub fn parse(s: &'static str, ts_query: &TreeSitterQuery) -> Result<Self, anyhow::Error> {
+    let template = LeonTemplate::parse(s).context("failed to parse template")?;
+    let idx_to_name = template
+      .keys()
+      .map(|key| {
+        ts_query
+          .capture_index_for_name(key)
+          .with_context(|| format!("{key:?} in template but not in query"))
+          .map(|idx| (idx, key.to_string()))
+      })
+      .collect::<Result<_, _>>()?;
+
+    Self { template, idx_to_name }.ok()
+  }
+}
+
 impl Config {
   /// Returns all extensions the config references.
   pub fn extensions(&self) -> impl Iterator<Item = &'static str> + '_ {
@@ -64,7 +99,7 @@ impl Language {
     }
   }
 
-  pub fn to_tree_sitter(&self) -> TreeSitterLanguage {
+  pub fn as_tree_sitter(&self) -> TreeSitterLanguage {
     match self {
       Self::C => tree_sitter_c::LANGUAGE.into(),
       Self::Cpp => tree_sitter_cpp::LANGUAGE.into(),
@@ -98,8 +133,52 @@ where
   D: Deserializer<'de>,
 {
   #[derive(Deserialize)]
+  #[serde(untagged)]
+  enum RawQuery {
+    Bare(String),
+    Transformed {
+      #[serde(default)]
+      leading: String,
+      query: String,
+      #[serde(default)]
+      trailing: String,
+    },
+  }
+
+  impl RawQuery {
+    pub fn to_query(&self, ts_language: &TreeSitterLanguage) -> Result<Query, anyhow::Error> {
+      match self {
+        Self::Bare(query) => Query {
+          ts_query: TreeSitterQuery::new(ts_language, query).context("failed to parse query")?,
+          leading: None,
+          trailing: None,
+        },
+
+        Self::Transformed {
+          leading,
+          query,
+          trailing,
+        } => {
+          let ts_query = TreeSitterQuery::new(ts_language, query).context("failed to parse query")?;
+
+          Query {
+            leading: Template::parse(leading.to_owned().leak(), &ts_query)
+              .context("failed to parse leading template")?
+              .some(),
+            trailing: Template::parse(trailing.to_owned().leak(), &ts_query)
+              .context("failed to parse trailing template")?
+              .some(),
+            ts_query,
+          }
+        }
+      }
+      .ok()
+    }
+  }
+
+  #[derive(Deserialize)]
   struct RawLanguageConfig {
-    queries: HashMap<SymbolKind, OneOrMany<String>>,
+    queries: HashMap<SymbolKind, OneOrMany<RawQuery>>,
   }
 
   // Deserializes queries as strings and attempts to parse them using the
@@ -107,7 +186,7 @@ where
   HashMap::<Language, RawLanguageConfig>::deserialize(deserializer)?
     .into_iter()
     .map(|(language, language_config)| {
-      let ts_language = language.to_tree_sitter();
+      let ts_language = language.as_tree_sitter();
 
       let queries: HashMap<SymbolKind, Vec<Query>> = language_config
         .queries
@@ -116,11 +195,9 @@ where
           let queries = Vec::from(queries);
           let queries = queries
             .into_iter()
-            .map(|query| {
-              Query::new(&ts_language, &query)
-                .map_err(|e| D::Error::custom(format!("failed to parse query {query:?}: {e:?}")))
-            })
-            .collect::<Result<_, _>>()?;
+            .map(|raw_query| raw_query.to_query(&ts_language))
+            .collect::<Result<_, _>>()
+            .map_err(D::Error::custom)?;
 
           Ok((symbol_kind, queries))
         })

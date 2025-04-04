@@ -1,5 +1,12 @@
 use std::fmt::Debug;
 
+#[extend::ext(name=Leak)]
+pub impl<T> T {
+  fn leak(self) -> &'static T {
+    Box::leak(Box::new(self))
+  }
+}
+
 #[extend::ext(name=ResultExt)]
 pub impl<T> T {
   fn ok<E>(self) -> Result<T, E> {
@@ -12,7 +19,11 @@ pub impl<T> T {
   {
     match self.into() {
       Ok(t) => t.some(),
-      Err(e) => eprintln!("{e:?}").none(),
+      Err(e) => {
+        eprintln!("{e:?}");
+
+        None
+      }
     }
   }
 }

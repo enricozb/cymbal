@@ -1,23 +1,28 @@
 [rust.queries]
-enum     = "(enum_item name: (type_identifier) @name)"
-struct   = "(struct_item name: (type_identifier) @name)"
-method   = "(declaration_list (function_item name: (identifier) @name))"
-function = "(function_item name: (identifier) @name)"
-impl     = "(impl_item type: (type_identifier) @name)"
-macro    = "(macro_definition name: (identifier) @name)"
-module   = "(mod_item name: (identifier) @name)"
-trait    = "(trait_item name: (type_identifier) @name)"
-type     = "(type_item name: (type_identifier) @name)"
+enum     = '(enum_item name: (type_identifier) @symbol)'
+struct   = '(struct_item name: (type_identifier) @symbol)'
+method   = '(declaration_list (function_item name: (identifier) @symbol))'
+function = '(function_item name: (identifier) @symbol)'
+impl     = [
+  '(impl_item !trait type: (type_identifier) @symbol)',
+  { leading = ' {trait} for', query = '(impl_item trait: _ @trait (type_identifier) @symbol)' },
+  # extend::ext implementations with the name as the symbol
+  '(attribute (scoped_identifier) @attr (#eq? @attr "extend::ext") arguments: (_ "=" _ @symbol ")"))',
+]
+macro    = '(macro_definition name: (identifier) @symbol)'
+module   = '(mod_item name: (identifier) @symbol)'
+trait    = '(trait_item name: (type_identifier) @symbol)'
+type     = '(type_item name: (type_identifier) @symbol)'
 
 [odin.queries]
-struct   = "(struct_declaration (identifier) @name \"::\")"
-method   = "(procedure_declaration (identifier) @name)"
-type     = "(const_declaration (identifier) @name)"
-module   = " (import_declaration alias: (identifier) @name ) "
+struct   = '(struct_declaration (identifier) @symbol "::")'
+method   = '(procedure_declaration (identifier) @symbol)'
+type     = '(const_declaration (identifier) @symbol)'
+module   = '(import_declaration alias: (identifier) @symbol)'
 
 [python.queries]
-function = "(function_definition name: (identifier) @name)"
-class = "(class_definition name: (identifier) @name)"
+function = '(function_definition name: (identifier) @symbol)'
+class = '(class_definition name: (identifier) @symbol)'
 
 [go.queries]
 # function = [
@@ -28,42 +33,42 @@ class = "(class_definition name: (identifier) @name)"
 # const = "variable.other.constant.declaration.go - meta.block.go"
 
 [typescript.queries]
-class = "(class_declaration name: (type_identifier) @name)"
-method = "(method_signature name: (property_identifier) @name)"
+class = '(class_declaration name: (type_identifier) @symbol)'
+method = '(method_signature name: (property_identifier) @symbol)'
 function = [
-  "(function_declaration name: (identifier))",
-  "(program (lexical_declaration (variable_declarator name: (identifier) @name value: (arrow_function))))",
-  "(program (export_statement (lexical_declaration (variable_declarator name: (identifier) @name value: (arrow_function)))))",
+  '(function_declaration name: (identifier))',
+  '(program (lexical_declaration (variable_declarator name: (identifier) @symbol value: (arrow_function))))',
+  '(program (export_statement (lexical_declaration (variable_declarator name: (identifier) @symbol value: (arrow_function)))))',
 ]
 
 [c.queries]
-struct = "(struct_specifier name: (type_identifier) @name)"
+struct = '(struct_specifier name: (type_identifier) @symbol)'
 type = [
-  "(declaration type: (union_specifier name: (type_identifier) @name))",
-  "(type_definition declarator: (type_identifier) @name)"
+  '(declaration type: (union_specifier name: (type_identifier) @symbol))',
+  '(type_definition declarator: (type_identifier) @symbol)'
 ]
-function = "(function_declarator declarator: (identifier) @name)"
-enum = "(enum_specifier name: (type_identifier) @name)"
+function = '(function_declarator declarator: (identifier) @symbol)'
+enum = '(enum_specifier name: (type_identifier) @symbol)'
 
 [cpp.queries]
 type = [
-  "(type_definition declarator: (type_identifier) @name)",
-  "(enum_specifier name: (type_identifier) @name)",
+  '(type_definition declarator: (type_identifier) @symbol)',
+  '(enum_specifier name: (type_identifier) @symbol)',
 ]
 class = [
-  "(struct_specifier name: (type_identifier) @name body:(_))",
-  "(declaration type: (union_specifier name: (type_identifier) @name))",
-  "(class_specifier name: (type_identifier) @name)",
+  '(struct_specifier name: (type_identifier) @symbol body:(_))',
+  '(declaration type: (union_specifier name: (type_identifier) @symbol))',
+  '(class_specifier name: (type_identifier) @symbol)',
 ]
 function = [
-  "(function_declarator declarator: (identifier) @name)",
-  "(function_declarator declarator: (field_identifier) @name)",
+  '(function_declarator declarator: (identifier) @symbol)',
+  '(function_declarator declarator: (field_identifier) @symbol)',
 ]
-method = "(function_declarator declarator: (qualified_identifier scope: (namespace_identifier) name: (identifier) @name))"
+method = '(function_declarator declarator: (qualified_identifier scope: (namespace_identifier) name: (identifier) @symbol))'
 
 [haskell.queries]
 type = [
-  "(type_synomym name: (name) @name)",
-  "(data_type name: (name) @name)",
+  '(type_synomym name: (name) @symbol)',
+  '(data_type name: (name) @symbol)',
 ]
-function = "(haskell declarations: (declarations (signature name: (variable) @name)))"
+function = '(haskell declarations: (declarations (signature name: (variable) @symbol)))'

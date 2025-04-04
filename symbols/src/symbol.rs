@@ -2,17 +2,29 @@ use serde::{Deserialize, Serialize};
 
 use crate::text::Span;
 
-#[derive(Serialize, Deserialize)]
-pub struct Symbol<Path = (), Text = String> {
-  pub path: Path,
+#[derive(Default, Serialize, Deserialize)]
+pub struct Symbol<P = (), T = String> {
+  pub path: P,
   pub span: Span,
-  pub text: Text,
+  pub lead: T,
+  pub text: T,
+  pub tail: T,
   pub kind: Kind,
 }
 
-impl<Path, Text> Symbol<Path, Text> {
-  pub fn new(path: Path, span: Span, text: Text, kind: Kind) -> Self {
-    Self { path, span, text, kind }
+impl<P, T> Symbol<P, T> {
+  pub fn forget_path<T2>(self) -> Symbol<(), T2>
+  where
+    T: Into<T2>,
+  {
+    Symbol {
+      path: (),
+      span: self.span,
+      lead: self.lead.into(),
+      text: self.text.into(),
+      tail: self.tail.into(),
+      kind: self.kind,
+    }
   }
 }
 
@@ -40,6 +52,12 @@ pub enum Kind {
   Impl,
 
   Unknown,
+}
+
+impl Default for Kind {
+  fn default() -> Self {
+    Self::Unknown
+  }
 }
 
 impl Kind {

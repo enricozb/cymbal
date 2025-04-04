@@ -47,11 +47,13 @@ impl Writer {
     self
       .sink
       .send(Message::Symbol(format!(
-        "{path}{sep}{line}{sep}{col}{sep}{text}{sep}{kind}{end}",
+        "{path}{sep}{line}{sep}{col}{sep}{lead}{sep}{text}{sep}{tail}{sep}{kind}{end}",
         path = symbol.path,
         line = symbol.span.start.line,
         col = symbol.span.start.column,
+        lead = symbol.lead,
         text = symbol.text,
+        tail = symbol.tail,
         kind = symbol.kind.colored_abbreviation(),
         sep = self.separator,
         end = self.delimiter,

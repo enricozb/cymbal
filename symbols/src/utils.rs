@@ -1,9 +1,5 @@
 use serde::Deserialize;
 
-pub fn into_static<T>(t: T) -> &'static T {
-  Box::leak(Box::new(t))
-}
-
 #[derive(Deserialize)]
 #[serde(untagged)]
 pub enum OneOrMany<T> {

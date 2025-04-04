@@ -49,11 +49,18 @@ impl Worker {
       // if the cached file and the current file have the same modified timestamp,
       // use the entries from the cache.
       if modified == file_info.modified {
-        for Symbol { span, text, kind, .. } in &file_info.symbols {
+        for symbol in &file_info.symbols {
           // cached entries don't contain paths so they are re-inserted here.
           self
             .writer
-            .send(Symbol::new(path.as_os_str().to_string_lossy(), *span, text, *kind))
+            .send(Symbol {
+              path: path.as_os_str().to_string_lossy(),
+              span: symbol.span,
+              lead: &symbol.lead,
+              text: &symbol.text,
+              tail: &symbol.tail,
+              kind: symbol.kind,
+            })
             .context("failed to send symbol to writer")?;
         }
 
@@ -75,12 +82,14 @@ impl Worker {
     parser.on_symbol(|symbol| {
       self
         .writer
-        .send(Symbol::new(
-          path.as_os_str().to_string_lossy(),
-          symbol.span,
-          symbol.text,
-          symbol.kind,
-        ))
+        .send(Symbol {
+          path: path.as_os_str().to_string_lossy(),
+          span: symbol.span,
+          lead: symbol.lead,
+          text: symbol.text,
+          tail: symbol.tail,
+          kind: symbol.kind,
+        })
         .context("failed to send symbol")?;
 
       self

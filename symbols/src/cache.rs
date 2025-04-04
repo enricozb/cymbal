@@ -79,7 +79,7 @@ impl Cache {
       .get_mut(path)
       .with_context(|| format!("inserting symbol into unknown path: {path:?}"))?
       .symbols
-      .push(Symbol::new((), symbol.span, symbol.text.into(), symbol.kind));
+      .push(symbol.forget_path());
 
     Ok(())
   }

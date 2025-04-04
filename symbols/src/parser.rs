@@ -1,14 +1,15 @@
 use std::{
-  collections::HashSet,
+  collections::{HashMap, HashSet},
   path::{Path, PathBuf},
 };
 
 use anyhow::Context;
 use streaming_iterator::StreamingIterator;
-use tree_sitter::{Parser as TreeSitterParser, QueryCursor};
+use tree_sitter::{Parser as TreeSitterParser, QueryCursor, QueryMatch};
 
 use crate::{
-  config::{Config, Language, LanguageConfig},
+  config::{Config, Language, LanguageConfig, Query, Template},
+  ext::OptionExt,
   symbol::Symbol,
   text::{Loc, Span},
 };
@@ -39,7 +40,7 @@ impl<'a> Parser<'a> {
   ) -> Result<(), anyhow::Error> {
     let mut parser = TreeSitterParser::new();
     parser
-      .set_language(&self.language.to_tree_sitter())
+      .set_language(&self.language.as_tree_sitter())
       .context("set_language")?;
 
     let content = std::fs::read_to_string(&self.path).context("read")?;
@@ -49,37 +50,91 @@ impl<'a> Parser<'a> {
 
     for (kind, queries) in &self.language_config.queries {
       for query in queries {
+        let Some(symbol_index) = query.ts_query.capture_index_for_name("symbol") else {
+          continue;
+        };
+
         let mut cursor = QueryCursor::new();
-        let mut matches = cursor.matches(query, tree.root_node(), content.as_bytes());
+        let mut matches = cursor.matches(&query.ts_query, tree.root_node(), content.as_bytes());
 
         while let Some(m) = matches.next() {
-          for capture in m.captures {
-            let node = capture.node;
-            let start_pos = node.start_position();
+          let Some(capture) = m.captures.iter().find(|q| q.index == symbol_index) else {
+            continue;
+          };
 
-            if positions.contains(&start_pos) {
-              continue;
-            } else {
-              positions.insert(start_pos);
-            }
+          let node = capture.node;
+          let start_pos = node.start_position();
 
-            let end_pos = node.start_position();
-
-            let start_byte = node.start_byte();
-            let end_byte = node.end_byte();
-            let text = &content[start_byte..end_byte];
-
-            let span = Span::new(
-              Loc::new(start_pos.row + 1, start_pos.column + 1),
-              Loc::new(end_pos.row + 1, end_pos.column + 1),
-            );
-
-            callback(Symbol::new((), span, text, *kind)).context("callback")?;
+          if positions.contains(&start_pos) {
+            continue;
+          } else {
+            positions.insert(start_pos);
           }
+
+          let end_pos = node.start_position();
+
+          let start_byte = node.start_byte();
+          let end_byte = node.end_byte();
+          let text = &content[start_byte..end_byte];
+
+          let span = Span::new(
+            Loc::new(start_pos.row + 1, start_pos.column + 1),
+            Loc::new(end_pos.row + 1, end_pos.column + 1),
+          );
+
+          let lead = &query.render_leading(m, &content).context("failed to render leading")?;
+          let tail = &query
+            .render_trailing(m, &content)
+            .context("failed to render trailing")?;
+
+          callback(Symbol {
+            path: (),
+            span,
+            lead,
+            text,
+            tail,
+            kind: *kind,
+          })
+          .context("callback")?;
         }
       }
     }
 
     Ok(())
+  }
+}
+
+impl Query {
+  pub fn render_leading(&self, m: &QueryMatch, content: &str) -> Result<String, anyhow::Error> {
+    let Some(leading) = &self.leading else {
+      return Ok(String::new());
+    };
+
+    leading.render(m, content).context("failed to render")
+  }
+
+  pub fn render_trailing(&self, m: &QueryMatch, content: &str) -> Result<String, anyhow::Error> {
+    let Some(trailing) = &self.trailing else {
+      return Ok(String::new());
+    };
+
+    trailing.render(m, content).context("failed to render")
+  }
+}
+
+impl Template {
+  pub fn render(&self, m: &QueryMatch, content: &str) -> Result<String, leon::RenderError> {
+    let values: HashMap<&str, &str> = m
+      .captures
+      .iter()
+      .filter_map(|capture| {
+        let name = self.idx_to_name.get(&capture.index)?.as_str();
+        let value = &content[capture.node.start_byte()..capture.node.end_byte()];
+
+        (name, value).some()
+      })
+      .collect();
+
+    self.template.render(&values)
   }
 }
