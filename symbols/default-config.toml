@@ -1,21 +1,46 @@
+[c]
+struct = '(struct_specifier name: (type_identifier) @symbol)'
+type = [
+  '(declaration type: (union_specifier name: (type_identifier) @symbol))',
+  '(type_definition declarator: (type_identifier) @symbol)'
+]
+function = '(function_declarator declarator: (identifier) @symbol)'
+enum = '(enum_specifier name: (type_identifier) @symbol)'
+
+[cpp]
+type = [
+  '(type_definition declarator: (type_identifier) @symbol)',
+  '(enum_specifier name: (type_identifier) @symbol)',
+]
+class = [
+  '(struct_specifier name: (type_identifier) @symbol body:(_))',
+  '(declaration type: (union_specifier name: (type_identifier) @symbol))',
+  '(class_specifier name: (type_identifier) @symbol)',
+]
+function = [
+  '(function_declarator declarator: (identifier) @symbol)',
+  '(function_declarator declarator: (field_identifier) @symbol)',
+]
+method = '(function_declarator declarator: (qualified_identifier scope: (namespace_identifier) name: (identifier) @symbol))'
+
 [rust]
+module   = '(mod_item name: (identifier) @symbol)'
+constant = [
+  '(static_item name: (identifier) @symbol)',
+  '(const_item name: (identifier) @symbol)',
+]
+type     = '(type_item name: (type_identifier) @symbol)'
 enum     = '(enum_item name: (type_identifier) @symbol)'
 struct   = '(struct_item name: (type_identifier) @symbol)'
+trait    = '(trait_item name: (type_identifier) @symbol)'
 method   = '(declaration_list (function_item name: (identifier) @symbol))'
 function = '(function_item name: (identifier) @symbol)'
+macro    = '(macro_definition name: (identifier) @symbol)'
 impl     = [
   '(impl_item !trait type: (type_identifier) @symbol)',
   { leading = ' {trait} for', query = '(impl_item trait: _ @trait (type_identifier) @symbol)' },
   # extend::ext implementations with the name as the symbol
   '(attribute (scoped_identifier) @attr (#eq? @attr "extend::ext") arguments: (_ "=" _ @symbol ")"))',
-]
-macro    = '(macro_definition name: (identifier) @symbol)'
-module   = '(mod_item name: (identifier) @symbol)'
-trait    = '(trait_item name: (type_identifier) @symbol)'
-type     = '(type_item name: (type_identifier) @symbol)'
-constant = [
-  '(static_item name: (identifier) @symbol)',
-  '(const_item name: (identifier) @symbol)',
 ]
 
 [odin]
@@ -44,31 +69,6 @@ function = [
   '(program (lexical_declaration (variable_declarator name: (identifier) @symbol value: (arrow_function))))',
   '(program (export_statement (lexical_declaration (variable_declarator name: (identifier) @symbol value: (arrow_function)))))',
 ]
-
-[c]
-struct = '(struct_specifier name: (type_identifier) @symbol)'
-type = [
-  '(declaration type: (union_specifier name: (type_identifier) @symbol))',
-  '(type_definition declarator: (type_identifier) @symbol)'
-]
-function = '(function_declarator declarator: (identifier) @symbol)'
-enum = '(enum_specifier name: (type_identifier) @symbol)'
-
-[cpp]
-type = [
-  '(type_definition declarator: (type_identifier) @symbol)',
-  '(enum_specifier name: (type_identifier) @symbol)',
-]
-class = [
-  '(struct_specifier name: (type_identifier) @symbol body:(_))',
-  '(declaration type: (union_specifier name: (type_identifier) @symbol))',
-  '(class_specifier name: (type_identifier) @symbol)',
-]
-function = [
-  '(function_declarator declarator: (identifier) @symbol)',
-  '(function_declarator declarator: (field_identifier) @symbol)',
-]
-method = '(function_declarator declarator: (qualified_identifier scope: (namespace_identifier) name: (identifier) @symbol))'
 
 [haskell]
 type = [
