@@ -8,16 +8,15 @@ use streaming_iterator::StreamingIterator;
 use tree_sitter::{Parser as TreeSitterParser, QueryCursor, QueryMatch};
 
 use crate::{
-  config::{Config, Language, LanguageConfig, Query, Template},
-  ext::OptionExt,
-  symbol::Symbol,
+  config::{Config, Language, Query},
+  symbol::{Kind as SymbolKind, Symbol},
   text::{Loc, Span},
 };
 
 pub struct Parser<'a> {
   path: PathBuf,
   language: Language,
-  language_config: &'a LanguageConfig,
+  queries: &'a HashMap<SymbolKind, Vec<Query>>,
 }
 
 impl<'a> Parser<'a> {
@@ -25,12 +24,12 @@ impl<'a> Parser<'a> {
     let path = path.as_ref();
     let extension = path.extension()?.to_str()?;
     let language = Language::from_extension(extension)?;
-    let language_config = config.languages.get(&language)?;
+    let queries = &config.languages.get(&language)?.queries;
 
     Some(Self {
       path: path.to_path_buf(),
       language,
-      language_config,
+      queries,
     })
   }
 
@@ -48,7 +47,7 @@ impl<'a> Parser<'a> {
     let tree = parser.parse(content.as_bytes(), None).context("parse")?;
     let mut positions = HashSet::new();
 
-    for (kind, queries) in &self.language_config.queries {
+    for (kind, queries) in self.queries {
       for query in queries {
         let Some(symbol_index) = query.ts_query.capture_index_for_name("symbol") else {
           continue;
@@ -119,22 +118,5 @@ impl Query {
     };
 
     trailing.render(m, content).context("failed to render")
-  }
-}
-
-impl Template {
-  pub fn render(&self, m: &QueryMatch, content: &str) -> Result<String, leon::RenderError> {
-    let values: HashMap<&str, &str> = m
-      .captures
-      .iter()
-      .filter_map(|capture| {
-        let name = self.idx_to_name.get(&capture.index)?.as_str();
-        let value = &content[capture.node.start_byte()..capture.node.end_byte()];
-
-        (name, value).some()
-      })
-      .collect();
-
-    self.template.render(&values)
   }
 }

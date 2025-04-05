@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-#[derive(Deserialize)]
+#[derive(Clone, Deserialize)]
 #[serde(untagged)]
 pub enum OneOrMany<T> {
   One(T),
@@ -12,6 +12,18 @@ impl<T> From<OneOrMany<T>> for Vec<T> {
     match from {
       OneOrMany::One(val) => vec![val],
       OneOrMany::Many(vec) => vec,
+    }
+  }
+}
+
+impl<T> IntoIterator for OneOrMany<T> {
+  type Item = T;
+  type IntoIter = std::vec::IntoIter<T>;
+
+  fn into_iter(self) -> Self::IntoIter {
+    match self {
+      OneOrMany::One(val) => vec![val].into_iter(),
+      OneOrMany::Many(vec) => vec.into_iter(),
     }
   }
 }

@@ -4,6 +4,7 @@ mod config;
 mod ext;
 mod parser;
 mod symbol;
+mod template;
 mod text;
 mod utils;
 mod walker;
@@ -18,6 +19,11 @@ use parking_lot::RwLock;
 
 use crate::{args::Args, ext::Leak, walker::Walker, worker::Worker, writer::Writer};
 
+// TODO(enricozb):
+// - add daemonization
+// - add a `path` positional argument to search in specific directories
+// - investigate caching TSQuery: https://github.com/tree-sitter/tree-sitter/issues/1942
+// - add appropriate C++ symbols with leading and trailing templates
 fn main() -> Result<(), anyhow::Error> {
   let args = Args::parse();
 

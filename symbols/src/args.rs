@@ -3,7 +3,11 @@ use std::{borrow::Cow, path::PathBuf};
 use anyhow::Context;
 use clap::Parser;
 
-use crate::{cache::Cache, config::Config};
+use crate::{
+  cache::Cache,
+  config::{raw::RawConfig, Config, Language},
+  ext::{OptionExt, ResultExt},
+};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -15,16 +19,16 @@ pub struct Args {
   /// The default configuration will be applied if this argument is not
   /// provided or if it is the empty string.
   #[arg(short, long)]
-  language_config: Option<String>,
+  config: Option<String>,
   /// Directory to cache parsed symbols.
   ///
   /// Files are reparsed if their cached mtime differs from than their current
-  /// mtime. The cache is only usable if the previously generated relative
-  /// paths are still valid. This would normally only be the case when the
-  /// binary is called from the same directory multiple times.
+  /// mtime, or the path of the file doesn't exist in the cache. This option
+  /// is typically used when `symbols` is called from the same directory
+  /// multiple times, such as searching over a code base in an editor.
   ///
-  /// This directory is created if it does not exist.
-  #[arg(short, long)]
+  /// The directory is created if it does not exist.
+  #[arg(long)]
   cache_dir: Option<PathBuf>,
   /// The characters between properties of a single symbol.
   ///
@@ -51,14 +55,28 @@ pub struct Args {
   /// The number of worker threads to use when parsing files.
   ///
   /// This defaults to `std::thread::available_parallelism` if it is available,
-  /// and otherwise is 8.
+  /// and otherwise defaults to 8.
   #[arg(short, long)]
   threads: Option<usize>,
+  /// Only show symbols from files with extensions matching this language.
+  ///
+  /// This option takes precedence over `--extension`.
+  #[arg(short, long)]
+  language: Option<Language>,
+  /// Only show symbols from files with extensions matching this extension's
+  /// language. Note that this will not filter for symbols in files matching
+  /// this extension, but for files with the same language as this extension's.
+  ///
+  /// The `--language` option takes precedence over `--extension`.
+  #[arg(short, long)]
+  extension: Option<String>,
+  #[arg(default_value = ".")]
+  path: Option<PathBuf>,
 }
 
 impl Args {
-  pub fn config(&self) -> Result<Config, anyhow::Error> {
-    if let Some(config) = &self.language_config {
+  fn raw_config(&self) -> Result<RawConfig, anyhow::Error> {
+    if let Some(config) = &self.config {
       let config_content: Cow<str> = if config.ends_with(".toml") {
         std::fs::read_to_string(config)
           .context("failed to read config file")?
@@ -72,8 +90,40 @@ impl Args {
       }
     }
 
-    Ok(Config::default())
+    RawConfig::default().ok()
   }
+
+  fn language(&self) -> Result<Option<Language>, anyhow::Error> {
+    if let Some(language) = self.language {
+      return language.some().ok();
+    }
+
+    if let Some(extension) = &self.extension {
+      return Language::from_extension(extension)
+        .context("unknown language")
+        .map(Some);
+    }
+
+    None.ok()
+  }
+
+  pub fn config(&self) -> Result<Config, anyhow::Error> {
+    let mut raw_config = self.raw_config()?;
+
+    if let Some(language) = self.language()? {
+      raw_config = raw_config.for_language(language);
+    }
+
+    raw_config.try_into()
+  }
+
+  // pub fn config(&self) -> Result<Config, anyhow::Error> {
+  //   let config = self.full_config()?;
+
+  //   if let Some(language) = &self.language {
+  //     config.
+  //   }
+  // }
 
   pub fn cache(&self) -> Result<Cache, anyhow::Error> {
     if let Some(cache_dir) = &self.cache_dir {

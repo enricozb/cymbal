@@ -1,4 +1,4 @@
-[rust.queries]
+[rust]
 enum     = '(enum_item name: (type_identifier) @symbol)'
 struct   = '(struct_item name: (type_identifier) @symbol)'
 method   = '(declaration_list (function_item name: (identifier) @symbol))'
@@ -13,18 +13,22 @@ macro    = '(macro_definition name: (identifier) @symbol)'
 module   = '(mod_item name: (identifier) @symbol)'
 trait    = '(trait_item name: (type_identifier) @symbol)'
 type     = '(type_item name: (type_identifier) @symbol)'
+constant = [
+  '(static_item name: (identifier) @symbol)',
+  '(const_item name: (identifier) @symbol)',
+]
 
-[odin.queries]
+[odin]
 struct   = '(struct_declaration (identifier) @symbol "::")'
 method   = '(procedure_declaration (identifier) @symbol)'
 type     = '(const_declaration (identifier) @symbol)'
 module   = '(import_declaration alias: (identifier) @symbol)'
 
-[python.queries]
+[python]
 function = '(function_definition name: (identifier) @symbol)'
 class = '(class_definition name: (identifier) @symbol)'
 
-[go.queries]
+[go]
 # function = [
 #   "entity.name.function.go"
 #   "variable.other.readwrite.declaration.go - meta.block.go"
@@ -32,7 +36,7 @@ class = '(class_definition name: (identifier) @symbol)'
 # type = "entity.name.type.go"
 # const = "variable.other.constant.declaration.go - meta.block.go"
 
-[typescript.queries]
+[typescript]
 class = '(class_declaration name: (type_identifier) @symbol)'
 method = '(method_signature name: (property_identifier) @symbol)'
 function = [
@@ -41,7 +45,7 @@ function = [
   '(program (export_statement (lexical_declaration (variable_declarator name: (identifier) @symbol value: (arrow_function)))))',
 ]
 
-[c.queries]
+[c]
 struct = '(struct_specifier name: (type_identifier) @symbol)'
 type = [
   '(declaration type: (union_specifier name: (type_identifier) @symbol))',
@@ -50,7 +54,7 @@ type = [
 function = '(function_declarator declarator: (identifier) @symbol)'
 enum = '(enum_specifier name: (type_identifier) @symbol)'
 
-[cpp.queries]
+[cpp]
 type = [
   '(type_definition declarator: (type_identifier) @symbol)',
   '(enum_specifier name: (type_identifier) @symbol)',
@@ -66,7 +70,7 @@ function = [
 ]
 method = '(function_declarator declarator: (qualified_identifier scope: (namespace_identifier) name: (identifier) @symbol))'
 
-[haskell.queries]
+[haskell]
 type = [
   '(type_synomym name: (name) @symbol)',
   '(data_type name: (name) @symbol)',
