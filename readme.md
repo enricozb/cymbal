@@ -165,7 +165,7 @@ like in `function` above.
 
 Additionally, each query can be garnished with a `leading` and/or `trailing`
 text. These are templates that are hydrated using captures from the tree-sitter
-query, such as in the queriese for `method` above.
+query, such as in the queries for `method` above.
 
 [1]: https://asciinema.org/a/MzqFoRPvOqTztcuUg1PGWnUup
 [2]: https://github.com/junegunn/fzf
