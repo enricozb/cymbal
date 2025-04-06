@@ -4,8 +4,8 @@ version = "0.1.0"
 edition = "2024"
 description = "search for symbols in a codebase"
 license = "CC0-1.0"
-repository = "https://github.com/enricozb/symbol-search.kak"
-readme = "readme.md"
+repository = "https://github.com/enricozb/cymbal"
+readme = "../readme.md"
 
 [dependencies]
 anyhow = "1.0.97"
