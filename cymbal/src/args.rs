@@ -1,4 +1,7 @@
-use std::{borrow::Cow, path::PathBuf};
+use std::{
+  borrow::Cow,
+  path::{Path, PathBuf},
+};
 
 use anyhow::Context;
 use clap::Parser;
@@ -74,6 +77,14 @@ pub struct Args {
   /// The `--language` option takes precedence over `--extension`.
   #[arg(short, long)]
   extension: Option<String>,
+  /// The file or directory to search for symbols in.
+  ///
+  /// If this is a directory, it is recursively searched for files with
+  /// supported extensions.
+  ///
+  /// If this is a file, it is searched for symbols, and `--language` and
+  /// `--extension` are ignored, and the langauge appropriate for the file
+  /// is used.
   #[arg(default_value = ".")]
   path: Option<PathBuf>,
 }
@@ -121,13 +132,15 @@ impl Args {
     raw_config.convert::<Config>().ok()
   }
 
-  // pub fn config(&self) -> Result<Config, anyhow::Error> {
-  //   let config = self.full_config()?;
+  pub fn file(&self) -> Option<&Path> {
+    if let Some(path) = &self.path {
+      if path.is_file() {
+        return path.as_path().some();
+      }
+    }
 
-  //   if let Some(language) = &self.language {
-  //     config.
-  //   }
-  // }
+    None
+  }
 
   pub fn cache(&self) -> Result<Cache, anyhow::Error> {
     if let Some(cache_dir) = &self.cache_dir {

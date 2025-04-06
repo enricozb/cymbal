@@ -21,8 +21,6 @@ use crate::{args::Args, ext::Leak, walker::Walker, worker::Worker, writer::Write
 
 // TODO(enricozb):
 // - add daemonization
-// - add a `path` positional argument to search in specific directories
-// - add lazy parsing of queries
 // - investigate caching TSQuery: https://github.com/tree-sitter/tree-sitter/issues/1942
 fn main() -> Result<(), anyhow::Error> {
   let args = Args::parse();
@@ -31,7 +29,12 @@ fn main() -> Result<(), anyhow::Error> {
   let cache = Arc::new(RwLock::new(args.cache()?));
   let num_threads = args.num_threads();
 
-  let walker = Walker::spawn(config.extensions(), args.num_threads() * 8)?;
+  let walker = if let Some(file) = args.file() {
+    Walker::single(file)?
+  } else {
+    Walker::spawn(config.extensions(), args.num_threads() * 8)?
+  };
+
   let (writer, writer_handle) = Writer::spawn(args.delimiter, args.separator, args.num_threads() * 8)?;
 
   let mut worker_handles = Vec::new();

@@ -9,12 +9,22 @@ use std::{
 use anyhow::Context;
 use crossbeam::channel::Receiver;
 
+use crate::ext::ResultExt;
+
 /// A file walker that emits files through a channel.
 pub struct Walker {
   pub files: Receiver<PathBuf>,
 }
 
 impl Walker {
+  pub fn single<P: Into<PathBuf>>(file: P) -> Result<Self, anyhow::Error> {
+    let (send, recv) = crossbeam::channel::unbounded();
+
+    send.send(file.into()).context("failed to send")?;
+
+    Self { files: recv }.ok()
+  }
+
   pub fn spawn<'a>(extensions: impl IntoIterator<Item = &'a str>, capacity: usize) -> Result<Self, anyhow::Error> {
     let extension_args: Vec<&str> = extensions.into_iter().flat_map(|ext| vec!["-e", ext]).collect();
 
@@ -37,6 +47,6 @@ impl Walker {
       }
     });
 
-    Ok(Self { files: recv })
+    Self { files: recv }.ok()
   }
 }
