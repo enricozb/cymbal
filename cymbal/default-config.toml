@@ -39,8 +39,8 @@ method   = '(declaration_list (function_item name: (identifier) @symbol))'
 function = '(function_item name: (identifier) @symbol)'
 macro    = '(macro_definition name: (identifier) @symbol)'
 impl     = [
-  '(impl_item !trait type: (type_identifier) @symbol)',
-  { leading = '{trait} for ', query = '(impl_item trait: _ @trait (type_identifier) @symbol)' },
+  '(impl_item !trait type: (_) @symbol)',
+  { leading = '{trait} for ', query = '(impl_item trait: _ @trait (_) @symbol)' },
   # extend::ext implementations with the name as the symbol
   '(attribute (scoped_identifier) @attr (#eq? @attr "extend::ext") arguments: (_ "=" _ @symbol ")"))',
 ]
