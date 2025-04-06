@@ -1,7 +1,7 @@
 # cymbal - list symbols in a codebase
 
 ## Overview
-`cymbal` lists all symbols in a code base. For example,
+`cymbal` lists all symbols in a codebase. For example,
 ```
 $ cymbal --delimiter ' ' --separator \n
 (impl)   ./cymbal/src/ext.rs 10 20  ResultExt
@@ -20,7 +20,7 @@ $ cymbal --delimiter ' ' --separator \n
 
 ## Use Case: Jump to symbol from command-line
 A potential use of `cymbal` is to jump to symbols from the command-line:
-[![asciicast](https://asciinema.org/a/MzqFoRPvOqTztcuUg1PGWnUup.svg)](https://asciinema.org/a/MzqFoRPvOqTztcuUg1PGWnUup)
+[![asciicast](https://asciinema.org/a/MzqFoRPvOqTztcuUg1PGWnUup.svg)][1]
 
 This was done using the following fish functions:
 ```fish
@@ -59,6 +59,9 @@ function symbol-search-open -d "opens a kak instance after a symbol search"
   end
 end
 ```
+
+This example sets up `<c-r>` as a toggle within [fzf][2] to filter for the
+entire symbol including leading and trailing text.
 
 ## Usage
 ```
@@ -133,8 +136,8 @@ Options:
 ```
 
 ## Configuration
-`cymbal` is configured with [TOML][1] on a per-language basis. See
-[default-config.toml][2] for the default configuration.
+`cymbal` is configured with [TOML][3] on a per-language basis. See
+[default-config.toml][4] for the default configuration.
 
 Each language has a set of queries for different kinds of symbols that can be
 found in that language. For example for C++,
@@ -155,7 +158,7 @@ method = [
   { leading = '{scope.1}::{scope.2}::', query = '(function_declarator declarator: (qualified_identifier scope: (_) @scope.1 name: (qualified_identifier scope: (_) @scope.2 name: (identifier) @symbol)))' },
 ]
 ```
-There is a fixed set of symbols that are valid, see [`symbol.rs`][3]. For each
+There is a fixed set of symbols that are valid, see [`symbol.rs`][5]. For each
 language, each symbol kind can have multiple queries, such as `method` above.
 For symbol kinds where only a single query is needed, a string can be used,
 like in `function` above.
@@ -164,6 +167,8 @@ Additionally, each query can be garnished with a `leading` and/or `trailing`
 text. These are templates that are hydrated using captures from the tree-sitter
 query, such as in the queriese for `method` above.
 
-[1]: https://toml.io/en/
-[2]: ./cymbal/default-config.toml
-[3]: ./cymbal/src/symbol.rs
+[1]: https://asciinema.org/a/MzqFoRPvOqTztcuUg1PGWnUup
+[2]: https://github.com/junegunn/fzf
+[3]: https://toml.io/en/
+[4]: ./cymbal/default-config.toml
+[5]: ./cymbal/src/symbol.rs
