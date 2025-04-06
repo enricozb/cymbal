@@ -53,7 +53,7 @@ impl Worker {
           // cached entries don't contain paths so they are re-inserted here.
           self
             .writer
-            .send(Symbol {
+            .send(&Symbol {
               path: path.as_os_str().to_string_lossy(),
               span: symbol.span,
               lead: &symbol.lead,
@@ -82,7 +82,7 @@ impl Worker {
     parser.on_symbol(|symbol| {
       self
         .writer
-        .send(Symbol {
+        .send(&Symbol {
           path: path.as_os_str().to_string_lossy(),
           span: symbol.span,
           lead: symbol.lead,

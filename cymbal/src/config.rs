@@ -33,7 +33,7 @@ pub struct LanguageQueries {
 }
 
 pub struct Query {
-  pub ts_query: TreeSitterQuery,
+  pub ts: TreeSitterQuery,
   pub leading: Option<Template>,
   pub trailing: Option<Template>,
 }
@@ -41,12 +41,12 @@ pub struct Query {
 impl Config {
   /// Returns all extensions the config references.
   pub fn extensions(&self) -> impl Iterator<Item = &'static str> + '_ {
-    self.languages.keys().flat_map(Language::extensions).copied()
+    self.languages.keys().flat_map(|l| l.extensions()).copied()
   }
 }
 
 impl Language {
-  pub fn extensions(&self) -> &'static [&'static str] {
+  pub fn extensions(self) -> &'static [&'static str] {
     match self {
       Self::C => &["c", "h"],
       Self::Cpp => &["cpp", "cc", "hh"],
@@ -59,7 +59,7 @@ impl Language {
     }
   }
 
-  pub fn as_tree_sitter(&self) -> TreeSitterLanguage {
+  pub fn as_tree_sitter(self) -> TreeSitterLanguage {
     match self {
       Self::C => tree_sitter_c::LANGUAGE.into(),
       Self::Cpp => tree_sitter_cpp::LANGUAGE.into(),

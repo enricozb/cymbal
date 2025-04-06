@@ -49,12 +49,12 @@ impl<'a> Parser<'a> {
 
     for (kind, queries) in self.queries {
       for query in queries {
-        let Some(symbol_index) = query.ts_query.capture_index_for_name("symbol") else {
+        let Some(symbol_index) = query.ts.capture_index_for_name("symbol") else {
           continue;
         };
 
         let mut cursor = QueryCursor::new();
-        let mut matches = cursor.matches(&query.ts_query, tree.root_node(), content.as_bytes());
+        let mut matches = cursor.matches(&query.ts, tree.root_node(), content.as_bytes());
 
         while let Some(m) = matches.next() {
           let Some(capture) = m.captures.iter().find(|q| q.index == symbol_index) else {
@@ -66,9 +66,8 @@ impl<'a> Parser<'a> {
 
           if positions.contains(&start_pos) {
             continue;
-          } else {
-            positions.insert(start_pos);
           }
+          positions.insert(start_pos);
 
           let end_pos = node.start_position();
 

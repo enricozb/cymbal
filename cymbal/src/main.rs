@@ -22,6 +22,7 @@ use crate::{args::Args, ext::Leak, walker::Walker, worker::Worker, writer::Write
 // TODO(enricozb):
 // - add daemonization
 // - add a `path` positional argument to search in specific directories
+// - add lazy parsing of queries
 // - investigate caching TSQuery: https://github.com/tree-sitter/tree-sitter/issues/1942
 fn main() -> Result<(), anyhow::Error> {
   let args = Args::parse();

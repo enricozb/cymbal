@@ -39,7 +39,7 @@ impl Cache {
 
       return Ok(Self {
         path: Some(path.clone()),
-        files: Default::default(),
+        files: HashMap::default(),
       });
     }
 

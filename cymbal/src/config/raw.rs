@@ -77,7 +77,7 @@ impl TryFrom<RawConfig> for Config {
           .map(|(symbol_kind, queries)| {
             let queries = queries
               .into_iter()
-              .map(|raw_query| raw_query.to_query(&ts_language))
+              .map(|raw_query| raw_query.into_query(&ts_language))
               .collect::<Result<_>>()?;
 
             Ok((symbol_kind, queries))
@@ -93,10 +93,10 @@ impl TryFrom<RawConfig> for Config {
 }
 
 impl RawQuery {
-  fn to_query(self, ts_language: &TreeSitterLanguage) -> Result<Query, anyhow::Error> {
+  fn into_query(self, ts_language: &TreeSitterLanguage) -> Result<Query, anyhow::Error> {
     match self {
       Self::Bare(query) => Query {
-        ts_query: TreeSitterQuery::new(ts_language, &query).context("failed to parse query")?,
+        ts: TreeSitterQuery::new(ts_language, &query).context("failed to parse query")?,
         leading: None,
         trailing: None,
       },
@@ -106,12 +106,12 @@ impl RawQuery {
         query,
         trailing,
       } => {
-        let ts_query = TreeSitterQuery::new(ts_language, &query).context("failed to parse query")?;
+        let ts = TreeSitterQuery::new(ts_language, &query).context("failed to parse query")?;
 
         Query {
-          leading: Template::parse(leading, &ts_query).context("leading")?.some(),
-          trailing: Template::parse(trailing, &ts_query).context("trailing")?.some(),
-          ts_query,
+          leading: Template::parse(leading, &ts).context("leading")?.some(),
+          trailing: Template::parse(trailing, &ts).context("trailing")?.some(),
+          ts,
         }
       }
     }

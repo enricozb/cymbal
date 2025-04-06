@@ -53,8 +53,7 @@ impl Template {
           .captures
           .iter()
           .find(|c| *idx == c.index)
-          .map(|c| &content[c.node.start_byte()..c.node.end_byte()])
-          .unwrap_or(""),
+          .map_or("", |c| &content[c.node.start_byte()..c.node.end_byte()]),
       })
       .collect::<Vec<&str>>()
       .join("")

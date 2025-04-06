@@ -24,7 +24,7 @@ impl Writer {
 
     let handle = std::thread::spawn(move || {
       while let Ok(Message::Symbol(symbol)) = recv.recv() {
-        print!("{symbol}")
+        print!("{symbol}");
       }
     });
 
@@ -39,10 +39,10 @@ impl Writer {
       .ok()
   }
 
-  pub fn send<Path, Text>(&self, symbol: Symbol<Path, Text>) -> Result<(), anyhow::Error>
+  pub fn send<P, T>(&self, symbol: &Symbol<P, T>) -> Result<(), anyhow::Error>
   where
-    Path: Display,
-    Text: Display,
+    P: Display,
+    T: Display,
   {
     self
       .sink
