@@ -2,6 +2,9 @@
 name = "cymbal"
 version = "0.1.0"
 edition = "2024"
+description = "search for symbols in a codebase"
+readme = "readme.md"
+license = "CC0-1.0"
 
 [dependencies]
 anyhow = "1.0.97"
