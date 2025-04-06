@@ -6,7 +6,7 @@ use clap::Parser;
 use crate::{
   cache::Cache,
   config::{raw::RawConfig, Config, Language},
-  ext::{OptionExt, ResultExt},
+  ext::{IntoExt, OptionExt, ResultExt},
 };
 
 #[derive(Parser)]
@@ -118,7 +118,7 @@ impl Args {
       raw_config = raw_config.for_language(language);
     }
 
-    raw_config.try_into()
+    raw_config.convert::<Config>().ok()
   }
 
   // pub fn config(&self) -> Result<Config, anyhow::Error> {

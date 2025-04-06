@@ -7,6 +7,16 @@ pub impl<T> T {
   }
 }
 
+#[extend::ext(name=IntoExt)]
+pub impl<T> T {
+  fn convert<U>(self) -> U
+  where
+    Self: Into<U>,
+  {
+    self.into()
+  }
+}
+
 #[extend::ext(name=ResultExt)]
 pub impl<T> T {
   fn ok<E>(self) -> Result<T, E> {

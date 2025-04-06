@@ -5,7 +5,7 @@ use serde::Deserialize;
 use tree_sitter::{Language as TreeSitterLanguage, Query as TreeSitterQuery};
 
 use crate::{
-  config::{Config, Language, LanguageQueries, Query},
+  config::{Config, Language, LanguageQueries, Lazy, Query},
   ext::{OptionExt, ResultExt},
   symbol::Kind as SymbolKind,
   template::Template,
@@ -59,36 +59,38 @@ impl Default for RawConfig {
   }
 }
 
-impl TryFrom<RawConfig> for Config {
-  type Error = anyhow::Error;
-
-  fn try_from(raw_config: RawConfig) -> Result<Self, Self::Error> {
-    type Result<T> = std::result::Result<T, anyhow::Error>;
-
+impl From<RawConfig> for Config {
+  fn from(raw_config: RawConfig) -> Self {
     let languages = raw_config
       .languages
       .into_iter()
       .map(|(language, language_config)| {
-        let ts_language = language.as_tree_sitter();
+        (
+          language,
+          Lazy::new(Box::new(move || {
+            let ts_language = language.as_tree_sitter();
 
-        let queries: HashMap<SymbolKind, Vec<Query>> = language_config
-          .queries
-          .into_iter()
-          .map(|(symbol_kind, queries)| {
-            let queries = queries
+            let queries: HashMap<SymbolKind, Vec<Query>> = language_config
+              .queries
               .into_iter()
-              .map(|raw_query| raw_query.into_query(&ts_language))
-              .collect::<Result<_>>()?;
+              .map(|(symbol_kind, queries)| {
+                let queries = queries
+                  .into_iter()
+                  .map(|raw_query| raw_query.into_query(&ts_language))
+                  .collect::<Result<_, _>>()?;
 
-            Ok((symbol_kind, queries))
-          })
-          .collect::<Result<_>>()?;
+                Ok::<_, anyhow::Error>((symbol_kind, queries))
+              })
+              .collect::<Result<_, _>>()
+              .unwrap();
 
-        Ok((language, LanguageQueries { queries }))
+            LanguageQueries { queries }
+          })),
+        )
       })
-      .collect::<Result<_>>()?;
+      .collect();
 
-    Self { languages }.ok()
+    Self { languages }
   }
 }
 

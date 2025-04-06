@@ -1,6 +1,6 @@
 pub mod raw;
 
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::LazyLock};
 
 use clap::ValueEnum;
 use serde::Deserialize;
@@ -10,8 +10,10 @@ use crate::{ext::OptionExt, symbol::Kind as SymbolKind, template::Template};
 
 static DEFAULT_CONFIG: &str = include_str!("../default-config.toml");
 
+type Lazy<T> = LazyLock<T, Box<dyn FnOnce() -> T + Send>>;
+
 pub struct Config {
-  pub languages: HashMap<Language, LanguageQueries>,
+  pub languages: HashMap<Language, Lazy<LanguageQueries>>,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq, Hash, ValueEnum)]
