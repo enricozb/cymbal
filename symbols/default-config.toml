@@ -19,9 +19,11 @@ class = [
 ]
 function = [
   '(function_declarator declarator: (identifier) @symbol)',
-  '(function_declarator declarator: (field_identifier) @symbol)',
 ]
-method = '(function_declarator declarator: (qualified_identifier scope: (namespace_identifier) name: (identifier) @symbol))'
+method = [
+  { leading = '{scope}::', query = '(function_declarator declarator: (qualified_identifier scope: (_) @scope name: (identifier) @symbol))' },
+  { leading = '{scope.1}::{scope.2}::', query = '(function_declarator declarator: (qualified_identifier scope: (_) @scope.1 name: (qualified_identifier scope: (_) @scope.2 name: (identifier) @symbol)))' },
+]
 
 [rust]
 module   = '(mod_item name: (identifier) @symbol)'
@@ -38,7 +40,7 @@ function = '(function_item name: (identifier) @symbol)'
 macro    = '(macro_definition name: (identifier) @symbol)'
 impl     = [
   '(impl_item !trait type: (type_identifier) @symbol)',
-  { leading = ' {trait} for', query = '(impl_item trait: _ @trait (type_identifier) @symbol)' },
+  { leading = '{trait} for ', query = '(impl_item trait: _ @trait (type_identifier) @symbol)' },
   # extend::ext implementations with the name as the symbol
   '(attribute (scoped_identifier) @attr (#eq? @attr "extend::ext") arguments: (_ "=" _ @symbol ")"))',
 ]
