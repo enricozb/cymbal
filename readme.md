@@ -18,36 +18,47 @@ $ cymbal --delimiter ' ' --separator \n
 ...
 ```
 
-## Select a symbol with `fzf`
-```sh
-cymbal | fzf \
-      --delimiter \u200B \
-      --read0 \
-      --ansi \
-      --preview='bat {1} --color always --style=numbers,snip,header --highlight-line {2} --line-range {2}:+100' \
-      --reverse \
-      --with-nth='{7} {4,5,6}' \
-      --nth=2 \
-      --with-shell='bash -c' \
-      --bind=tab:down \
-      --bind=shift-tab:up \
-      --bind='ctrl-r:transform-prompt(
-          if [ "$FZF_PROMPT" = "full> " ]; then
-            echo "> "
-          else
-            echo "full> "
-          fi
-        )+transform-nth(
-          if [ "$FZF_PROMPT" = "full> " ]; then
-            echo "2"
-          else
-            echo "1.."
-          fi
-        )' | sed 's/\xE2\x80\x8B/ /g'
-```
-[![asciicast](https://asciinema.org/a/7kXvTMQiEEn8Pnb3GXaslUa3G.svg)](https://asciinema.org/a/7kXvTMQiEEn8Pnb3GXaslUa3G)
+## Use Case: Jump to symbol from command-line
+A potential use of `cymbal` is to jump to symbols from the command-line:
+[![asciicast](https://asciinema.org/a/MzqFoRPvOqTztcuUg1PGWnUup.svg)](https://asciinema.org/a/MzqFoRPvOqTztcuUg1PGWnUup)
 
-This can be used to jump to a symbol in a text editor.
+This was done using the following fish functions:
+```fish
+function symbol-search -d "shows an fzf menu with symbols at the current directory"
+  cymbal --delimiter \u0c | fzf \
+    --delimiter \u0c \
+    --read0 \
+    --ansi \
+    --preview='bat {2} --color always --style=numbers,snip,header --highlight-line {3} --line-range {3}:+100' \
+    --reverse \
+    --with-nth='{1} {5,6,7}' \
+    --nth=2 \
+    --with-shell='bash -c' \
+    --bind=tab:down \
+    --bind=shift-tab:up \
+    --bind='ctrl-r:transform-prompt(
+      if [ "$FZF_PROMPT" = "full> " ]; then
+        echo "> "
+      else
+        echo "full> "
+      fi
+     )+transform-nth(
+      if [ "$FZF_PROMPT" = "full> " ]; then
+        echo "1.."
+      else
+        echo "2"
+      fi
+     )' | awk -v FS=\u0c '{ print $2, $3, $4 }'
+end
+
+function symbol-search-open -d "opens a kak instance after a symbol search"
+  set symbol (symbol-search $argv | tr ' ' \n )
+
+  if [ -n "$symbol" ]
+    kak $symbol[1..-3] +$symbol[-2]:$symbol[-1]
+  end
+end
+```
 
 ## Usage
 ```
