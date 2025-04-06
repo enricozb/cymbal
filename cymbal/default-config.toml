@@ -71,6 +71,7 @@ function = [
   '(program (lexical_declaration (variable_declarator name: (identifier) @symbol value: (arrow_function))))',
   '(program (export_statement (lexical_declaration (variable_declarator name: (identifier) @symbol value: (arrow_function)))))',
 ]
+constant = '(program (export_statement declaration: (lexical_declaration kind: "const" (variable_declarator name: (identifier) @symbol))))'
 
 [haskell]
 type = [
