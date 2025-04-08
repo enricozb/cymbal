@@ -5,5 +5,8 @@ pkgs.rustPlatform.buildRustPackage rec {
   version = "0.4.0";
   src = ./.;
 
-  cargoLock = { lockFile = ./Cargo.lock; };
+  cargoLock = {
+    lockFile = ./Cargo.lock;
+    outputHashes = { "tree-sitter-fish-3.5.1" = "sha256-ED1lJ1GlbT/ptr+S9J1mD9fnfuewPko2rvj/qMVPCso="; };
+  };
 }

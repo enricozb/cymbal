@@ -34,7 +34,7 @@ impl Config {
   }
 }
 
-macro_rules! impl_language {
+macro_rules! Language {
   (
     $( { $name:ident, [$($ext:literal),*], $ts:expr } ),* $(,)?
   ) => {
@@ -69,7 +69,7 @@ macro_rules! impl_language {
   };
 }
 
-impl_language! {
+Language! {
   { C, ["c", "h"], tree_sitter_c::LANGUAGE.into() },
   { Cpp, ["cpp", "cc", "hh"], tree_sitter_cpp::LANGUAGE.into() },
   { Fish, ["fish"], tree_sitter_fish::language() },

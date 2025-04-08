@@ -30,30 +30,34 @@ alias = '(command name: _ @command (#eq? @command "alias") . argument: _ @symbol
 function = '(function_definition name: _ @symbol)'
 
 [rust]
-module   = '(mod_item name: (identifier) @symbol)'
+module = '(mod_item name: (identifier) @symbol)'
 constant = [
   '(static_item name: (identifier) @symbol)',
   '(const_item name: (identifier) @symbol)',
 ]
-type     = '(type_item name: (type_identifier) @symbol)'
-enum     = '(enum_item name: (type_identifier) @symbol)'
-struct   = '(struct_item name: (type_identifier) @symbol)'
-trait    = '(trait_item name: (type_identifier) @symbol)'
-method   = '(declaration_list (function_item name: (identifier) @symbol))'
+type = '(type_item name: (type_identifier) @symbol)'
+enum = '(enum_item name: (type_identifier) @symbol)'
+struct = '(struct_item name: (type_identifier) @symbol)'
+trait = '(trait_item name: (type_identifier) @symbol)'
+method = '(declaration_list (function_item name: (identifier) @symbol))'
 function = '(function_item name: (identifier) @symbol)'
-macro    = '(macro_definition name: (identifier) @symbol)'
-impl     = [
+macro = '(macro_definition name: (identifier) @symbol)'
+impl = [
   '(impl_item !trait type: [(type_identifier) (generic_type)] @symbol)',
   { leading = '{trait} for ', query = '(impl_item trait: _ @trait [(type_identifier) (generic_type)] @symbol)' },
   # extend::ext implementations with the name as the symbol
   '(attribute (scoped_identifier) @attr (#eq? @attr "extend::ext") arguments: (_ "=" _ @symbol ")"))',
 ]
 
+# TODO(enricozb): vendor tree-sitter-toml
+# [toml]
+# table = '(table "[" [(bare_key) (dotted_key)] @symbol "]")'
+
 [odin]
-struct   = '(struct_declaration (identifier) @symbol "::")'
-method   = '(procedure_declaration (identifier) @symbol)'
-type     = '(const_declaration (identifier) @symbol)'
-module   = '(import_declaration alias: (identifier) @symbol)'
+struct = '(struct_declaration (identifier) @symbol "::")'
+method = '(procedure_declaration (identifier) @symbol)'
+type = '(const_declaration (identifier) @symbol)'
+module = '(import_declaration alias: (identifier) @symbol)'
 
 [python]
 function = '(function_definition name: (identifier) @symbol)'
