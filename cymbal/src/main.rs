@@ -20,6 +20,8 @@ use parking_lot::RwLock;
 use crate::{args::Args, ext::Leak, walker::Walker, worker::Worker, writer::Writer};
 
 // TODO(enricozb):
+// - add graceful failure (don't print to stderr) if stdout closes.
+//   this happens when piping to fzf and fzf exits on quit or a selection.
 // - add daemonization
 // - investigate caching TSQuery: https://github.com/tree-sitter/tree-sitter/issues/1942
 fn main() -> Result<(), anyhow::Error> {

@@ -6,7 +6,7 @@ use clap::ValueEnum;
 use serde::Deserialize;
 use tree_sitter::{Language as TreeSitterLanguage, Query as TreeSitterQuery};
 
-use crate::{ext::OptionExt, symbol::Kind as SymbolKind, template::Template};
+use crate::{symbol::Kind as SymbolKind, template::Template};
 
 static DEFAULT_CONFIG: &str = include_str!("../default-config.toml");
 
@@ -14,19 +14,6 @@ type Lazy<T> = LazyLock<T, Box<dyn FnOnce() -> T + Send>>;
 
 pub struct Config {
   pub languages: HashMap<Language, Lazy<LanguageQueries>>,
-}
-
-#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq, Hash, ValueEnum)]
-#[serde(rename_all = "lowercase")]
-pub enum Language {
-  C,
-  Cpp,
-  Go,
-  Haskell,
-  Odin,
-  Python,
-  Rust,
-  TypeScript,
 }
 
 pub struct LanguageQueries {
@@ -47,45 +34,49 @@ impl Config {
   }
 }
 
-impl Language {
-  pub fn extensions(self) -> &'static [&'static str] {
-    match self {
-      Self::C => &["c", "h"],
-      Self::Cpp => &["cpp", "cc", "hh"],
-      Self::Go => &["go"],
-      Self::Haskell => &["hs"],
-      Self::Odin => &["odin"],
-      Self::Python => &["py"],
-      Self::Rust => &["rs"],
-      Self::TypeScript => &["js", "jsx", "ts", "tsx"],
+macro_rules! impl_language {
+  (
+    $( { $name:ident, [$($ext:literal),*], $ts:expr } ),* $(,)?
+  ) => {
+    #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq, Hash, ValueEnum)]
+    #[serde(rename_all = "lowercase")]
+    pub enum Language {
+      $( $name, )*
     }
-  }
 
-  pub fn as_tree_sitter(self) -> TreeSitterLanguage {
-    match self {
-      Self::C => tree_sitter_c::LANGUAGE.into(),
-      Self::Cpp => tree_sitter_cpp::LANGUAGE.into(),
-      Self::Go => tree_sitter_go::LANGUAGE.into(),
-      Self::Haskell => tree_sitter_haskell::LANGUAGE.into(),
-      Self::Odin => tree_sitter_odin::LANGUAGE.into(),
-      Self::Python => tree_sitter_python::LANGUAGE.into(),
-      Self::Rust => tree_sitter_rust::LANGUAGE.into(),
-      Self::TypeScript => tree_sitter_typescript::LANGUAGE_TSX.into(),
-    }
-  }
+    impl Language {
+      pub fn extensions(self) -> &'static [&'static str] {
+        match self {
+          $( Self::$name => &[$($ext),*], )*
+        }
+      }
 
-  pub fn from_extension<S: AsRef<str>>(extension: S) -> Option<Self> {
-    match extension.as_ref() {
-      "c" | "h" => Self::C,
-      "cpp" | "cc" | "hh" => Self::Cpp,
-      "go" => Self::Go,
-      "odin" => Self::Odin,
-      "hs" => Self::Haskell,
-      "py" => Self::Python,
-      "rs" => Self::Rust,
-      "js" | "jsx" | "ts" | "tsx" => Self::TypeScript,
-      _ => return None,
+      pub fn as_tree_sitter(self) -> TreeSitterLanguage {
+        match self {
+          $( Self::$name => $ts, )*
+        }
+      }
+
+      pub fn from_extension<S: AsRef<str>>(extension: S) -> Option<Self> {
+        match extension.as_ref() {
+          $(
+            $( $ext => Some(Self::$name), )*
+          )*
+          _ => None,
+        }
+      }
     }
-    .some()
-  }
+  };
+}
+
+impl_language! {
+  { C, ["c", "h"], tree_sitter_c::LANGUAGE.into() },
+  { Cpp, ["cpp", "cc", "hh"], tree_sitter_cpp::LANGUAGE.into() },
+  { Fish, ["fish"], tree_sitter_fish::language() },
+  { Go, ["go"], tree_sitter_go::LANGUAGE.into() },
+  { Haskell, ["hs"], tree_sitter_haskell::LANGUAGE.into() },
+  { Odin, ["odin"], tree_sitter_odin::LANGUAGE.into() },
+  { Python, ["py"], tree_sitter_python::LANGUAGE.into() },
+  { Rust, ["rs"], tree_sitter_rust::LANGUAGE.into() },
+  { TypeScript, ["js", "jsx", "ts", "tsx"], tree_sitter_typescript::LANGUAGE_TSX.into() },
 }

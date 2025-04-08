@@ -25,6 +25,10 @@ method = [
   { leading = '{scope.1}::{scope.2}::', query = '(function_declarator declarator: (qualified_identifier scope: (_) @scope.1 name: (qualified_identifier scope: (_) @scope.2 name: (identifier) @symbol)))' },
 ]
 
+[fish]
+alias = '(command name: _ @command (#eq? @command "alias") . argument: _ @symbol)'
+function = '(function_definition name: _ @symbol)'
+
 [rust]
 module   = '(mod_item name: (identifier) @symbol)'
 constant = [
