@@ -1,0 +1,4 @@
+- emit display languages e.g. (py), (rs), (hs), ...
+- vendor tree-sitter grammars that aren't published to crates.io
+  - toml
+  - fish
