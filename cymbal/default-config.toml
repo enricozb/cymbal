@@ -30,7 +30,6 @@ alias = '(command name: _ @command (#eq? @command "alias") . argument: _ @symbol
 function = '(function_definition name: _ @symbol)'
 
 [rust]
-module = '(mod_item name: (identifier) @symbol)'
 constant = [
   '(static_item name: (identifier) @symbol)',
   '(const_item name: (identifier) @symbol)',

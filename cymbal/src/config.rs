@@ -4,10 +4,10 @@ use std::{collections::HashMap, sync::LazyLock};
 
 use clap::ValueEnum;
 use indexmap::IndexMap;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use tree_sitter::{Language as TreeSitterLanguage, Query as TreeSitterQuery};
 
-use crate::{symbol::Kind as SymbolKind, template::Template};
+use crate::{color, symbol::Kind as SymbolKind, template::Template};
 
 static DEFAULT_CONFIG: &str = include_str!("../default-config.toml");
 
@@ -37,9 +37,9 @@ impl Config {
 
 macro_rules! Language {
   (
-    $( { $name:ident, [$($ext:literal),*], $ts:expr } ),* $(,)?
+    $( { $display_name:literal, $name:ident, $color:ident, [$($ext:literal),*], $ts:expr } ),* $(,)?
   ) => {
-    #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq, Hash, ValueEnum)]
+    #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq, Hash, ValueEnum)]
     #[serde(rename_all = "lowercase")]
     pub enum Language {
       $( $name, )*
@@ -58,6 +58,12 @@ macro_rules! Language {
         }
       }
 
+      pub fn colored_abbreviation(self) -> &'static str {
+        match self {
+          $( Self::$name => color!($display_name, $color), )*
+        }
+      }
+
       pub fn from_extension<S: AsRef<str>>(extension: S) -> Option<Self> {
         match extension.as_ref() {
           $(
@@ -71,13 +77,13 @@ macro_rules! Language {
 }
 
 Language! {
-  { C, ["c", "h"], tree_sitter_c::LANGUAGE.into() },
-  { Cpp, ["cpp", "cc", "hh"], tree_sitter_cpp::LANGUAGE.into() },
-  { Fish, ["fish"], tree_sitter_fish::language() },
-  { Go, ["go"], tree_sitter_go::LANGUAGE.into() },
-  { Haskell, ["hs"], tree_sitter_haskell::LANGUAGE.into() },
-  { Odin, ["odin"], tree_sitter_odin::LANGUAGE.into() },
-  { Python, ["py"], tree_sitter_python::LANGUAGE.into() },
-  { Rust, ["rs"], tree_sitter_rust::LANGUAGE.into() },
-  { TypeScript, ["js", "jsx", "ts", "tsx"], tree_sitter_typescript::LANGUAGE_TSX.into() },
+  { "(c)", C, blue, ["c", "h"], tree_sitter_c::LANGUAGE.into() },
+  { "(c++)", Cpp, blue, ["cpp", "cc", "hh"], tree_sitter_cpp::LANGUAGE.into() },
+  { "(fish)", Fish, green, ["fish"], tree_sitter_fish::language() },
+  { "(go)", Go, cyan, ["go"], tree_sitter_go::LANGUAGE.into() },
+  { "(hs)", Haskell, magenta, ["hs"], tree_sitter_haskell::LANGUAGE.into() },
+  { "(odin)", Odin, blue, ["odin"], tree_sitter_odin::LANGUAGE.into() },
+  { "(py)", Python, bright_yellow, ["py"], tree_sitter_python::LANGUAGE.into() },
+  { "(rs)", Rust, yellow, ["rs"], tree_sitter_rust::LANGUAGE.into() },
+  { "(ts)", TypeScript, blue, ["js", "jsx", "ts", "tsx"], tree_sitter_typescript::LANGUAGE_TSX.into() },
 }

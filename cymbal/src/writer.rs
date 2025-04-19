@@ -3,7 +3,7 @@ use std::{fmt::Display, thread::JoinHandle};
 use anyhow::Context;
 use crossbeam::channel::Sender;
 
-use crate::{ext::ResultExt, symbol::Symbol};
+use crate::{config::Language, ext::ResultExt, symbol::Symbol};
 
 pub enum Message {
   Symbol(String),
@@ -39,7 +39,7 @@ impl Writer {
       .ok()
   }
 
-  pub fn send<P, T>(&self, symbol: &Symbol<P, T>) -> Result<(), anyhow::Error>
+  pub fn send<P, T>(&self, language: Language, symbol: &Symbol<P, T>) -> Result<(), anyhow::Error>
   where
     P: Display,
     T: Display,
@@ -47,7 +47,8 @@ impl Writer {
     self
       .sink
       .send(Message::Symbol(format!(
-        "{kind}{dlm}{path}{dlm}{line}{dlm}{col}{dlm}{lead}{dlm}{text}{dlm}{tail}{end}",
+        "{lang}{dlm}{kind}{dlm}{path}{dlm}{line}{dlm}{col}{dlm}{lead}{dlm}{text}{dlm}{tail}{end}",
+        lang = language.colored_abbreviation(),
         kind = symbol.kind.colored_abbreviation(),
         path = symbol.path,
         line = symbol.span.start.line,

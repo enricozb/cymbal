@@ -1,5 +1,6 @@
 mod args;
 mod cache;
+mod color;
 mod config;
 mod ext;
 mod parser;

@@ -53,14 +53,17 @@ impl Worker {
           // cached entries don't contain paths so they are re-inserted here.
           self
             .writer
-            .send(&Symbol {
-              path: path.as_os_str().to_string_lossy(),
-              span: symbol.span,
-              lead: &symbol.lead,
-              text: &symbol.text,
-              tail: &symbol.tail,
-              kind: symbol.kind,
-            })
+            .send(
+              file_info.language,
+              &Symbol {
+                path: path.as_os_str().to_string_lossy(),
+                span: symbol.span,
+                lead: &symbol.lead,
+                text: &symbol.text,
+                tail: &symbol.tail,
+                kind: symbol.kind,
+              },
+            )
             .context("failed to send symbol to writer")?;
         }
 
@@ -73,23 +76,29 @@ impl Worker {
 
   /// Parses a file and inserts its entries into the cache.
   fn parse_file(&self, path: &PathBuf, modified: SystemTime) -> Result<(), anyhow::Error> {
-    self.cache.write().insert_file_info(path.clone(), modified);
-
     let Some(parser) = Parser::from_path(self.config, path) else {
       return Ok(());
     };
 
+    self
+      .cache
+      .write()
+      .insert_file_info(parser.language, path.clone(), modified);
+
     parser.on_symbol(|symbol| {
       self
         .writer
-        .send(&Symbol {
-          path: path.as_os_str().to_string_lossy(),
-          span: symbol.span,
-          lead: symbol.lead,
-          text: symbol.text,
-          tail: symbol.tail,
-          kind: symbol.kind,
-        })
+        .send(
+          parser.language,
+          &Symbol {
+            path: path.as_os_str().to_string_lossy(),
+            span: symbol.span,
+            lead: symbol.lead,
+            text: symbol.text,
+            tail: symbol.tail,
+            kind: symbol.kind,
+          },
+        )
         .context("failed to send symbol")?;
 
       self

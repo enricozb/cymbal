@@ -16,8 +16,8 @@ use crate::{
 
 pub struct Parser<'a> {
   path: PathBuf,
-  language: Language,
   queries: &'a IndexMap<SymbolKind, Vec<Query>>,
+  pub language: Language,
 }
 
 impl<'a> Parser<'a> {

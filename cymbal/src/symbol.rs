@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::text::Span;
+use crate::{color, text::Span};
 
 #[derive(Default, Serialize, Deserialize)]
 pub struct Symbol<P = (), T = String> {
@@ -63,31 +63,29 @@ impl Default for Kind {
 impl Kind {
   #[rustfmt::skip]
   pub fn colored_abbreviation(self) -> &'static str {
-    // TODO(enricozb): consider using a const function or crabtime to implement
-    // this more readably.
-    // these strings must all have the same printable length
+    // Note: these strings must all have the same printable length.
     match self {
-      Self::Module    => "\x1b[33m(mod)   \x1b[0m",
-      Self::Macro     => "\x1b[33m(macro) \x1b[0m",
-      Self::Global    => "\x1b[33m(global)\x1b[0m",
-      Self::Constant  => "\x1b[33m(const) \x1b[0m",
-      Self::Define    => "\x1b[33m(define)\x1b[0m",
+      Self::Module    => color!("(mod)   ", yellow),
+      Self::Macro     => color!("(macro) ", yellow),
+      Self::Global    => color!("(global)", yellow),
+      Self::Constant  => color!("(const) ", yellow),
+      Self::Define    => color!("(define)", yellow),
 
-      Self::Class     => "\x1b[36m(class) \x1b[0m",
-      Self::Struct    => "\x1b[36m(struct)\x1b[0m",
-      Self::Enum      => "\x1b[36m(enum)  \x1b[0m",
-      Self::Union     => "\x1b[36m(union) \x1b[0m",
+      Self::Class     => color!("(class) ", cyan),
+      Self::Struct    => color!("(struct)", cyan),
+      Self::Enum      => color!("(enum)  ", cyan),
+      Self::Union     => color!("(union) ", cyan),
 
-      Self::Alias     => "\x1b[34m(alias) \x1b[0m",
-      Self::Interface => "\x1b[34m(inter) \x1b[0m",
-      Self::Trait     => "\x1b[34m(trait) \x1b[0m",
-      Self::Type      => "\x1b[34m(type)  \x1b[0m",
+      Self::Alias     => color!("(alias)", blue),
+      Self::Interface => color!("(inter)", blue),
+      Self::Trait     => color!("(trait)", blue),
+      Self::Type      => color!("(type) ", blue),
 
-      Self::Function  => "\x1b[35m(func)  \x1b[0m",
-      Self::Method    => "\x1b[35m(method)\x1b[0m",
-      Self::Impl      => "\x1b[35m(impl)  \x1b[0m",
+      Self::Function  => color!("(func)  ", magenta),
+      Self::Method    => color!("(method)", magenta),
+      Self::Impl      => color!("(impl)  ", magenta),
 
-      Self::Unknown   => "\x1b[31m(??????)\x1b[0m",
+      Self::Unknown   => color!("(??????)", red),
     }
   }
 }

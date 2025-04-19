@@ -8,7 +8,7 @@ use std::{
 use anyhow::Context;
 use serde::{Deserialize, Serialize};
 
-use crate::{ext::ResultExt, symbol::Symbol};
+use crate::{config::Language, ext::ResultExt, symbol::Symbol};
 
 const CACHE_FILE_NAME: &str = "cache.json";
 
@@ -24,6 +24,8 @@ pub struct FileInfo {
   /// Cached symbols don't contain their own paths  as they are stored in the
   /// [`Cache::files`] field.
   pub symbols: Vec<Symbol<(), String>>,
+  /// The inferred language of this file.
+  pub language: Language,
 }
 
 impl Cache {
@@ -60,10 +62,11 @@ impl Cache {
   }
 
   /// Inserts a new [`FileInfo`] for a file at a given path.
-  pub fn insert_file_info(&mut self, path: PathBuf, modified: SystemTime) {
+  pub fn insert_file_info(&mut self, language: Language, path: PathBuf, modified: SystemTime) {
     self.files.insert(
       path,
       FileInfo {
+        language,
         modified,
         symbols: Vec::new(),
       },
