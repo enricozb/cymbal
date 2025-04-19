@@ -87,6 +87,9 @@ pub struct Args {
   /// is used.
   #[arg(default_value = ".")]
   path: Option<PathBuf>,
+  /// Print errors to standard error.
+  #[arg(long, default_value_t)]
+  pub debug: bool,
 }
 
 impl Args {

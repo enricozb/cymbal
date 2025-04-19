@@ -1,4 +1,4 @@
-use std::{fmt::Display, thread::JoinHandle};
+use std::{fmt::Display, io::Write, thread::JoinHandle};
 
 use anyhow::Context;
 use crossbeam::channel::Sender;
@@ -19,13 +19,20 @@ pub struct Writer {
 }
 
 impl Writer {
-  pub fn spawn(delimiter: char, separator: char, capacity: usize) -> Result<(Self, JoinHandle<()>), anyhow::Error> {
+  pub fn spawn(
+    delimiter: char,
+    separator: char,
+    capacity: usize,
+  ) -> Result<(Self, JoinHandle<Result<(), anyhow::Error>>), anyhow::Error> {
     let (send, recv) = crossbeam::channel::bounded(capacity);
 
     let handle = std::thread::spawn(move || {
       while let Ok(Message::Symbol(symbol)) = recv.recv() {
-        print!("{symbol}");
+        let mut stdout = std::io::stdout().lock();
+        write!(stdout, "{symbol}").context("failed to write to stdout")?;
       }
+
+      Ok(())
     });
 
     (

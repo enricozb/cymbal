@@ -21,13 +21,18 @@ use parking_lot::RwLock;
 use crate::{args::Args, ext::Leak, walker::Walker, worker::Worker, writer::Writer};
 
 // TODO(enricozb):
-// - add graceful failure (don't print to stderr) if stdout closes.
-//   this happens when piping to fzf and fzf exits on quit or a selection.
 // - add daemonization
 // - investigate caching TSQuery: https://github.com/tree-sitter/tree-sitter/issues/1942
 fn main() -> Result<(), anyhow::Error> {
   let args = Args::parse();
 
+  match cymbal(&args) {
+    Err(err) if args.debug => Err(err),
+    _ => Ok(()),
+  }
+}
+
+fn cymbal(args: &Args) -> Result<(), anyhow::Error> {
   let config = args.config()?.leak();
   let cache = Arc::new(RwLock::new(args.cache()?));
   let num_threads = args.num_threads();
@@ -50,14 +55,18 @@ fn main() -> Result<(), anyhow::Error> {
   for worker_handle in worker_handles {
     worker_handle
       .join()
-      .expect("join worker")
-      .context("failed to join worker")?;
+      .map_err(|err| anyhow::anyhow!("failed to join worker: {err:?}"))?
+      .context("worker failed")?;
   }
 
   cache.read().save().context("failed to save cache")?;
 
-  writer.stop()?;
-  writer_handle.join().expect("join writer");
+  writer.stop().context("failed to stop writer")?;
+
+  writer_handle
+    .join()
+    .map_err(|err| anyhow::anyhow!("failed to join writer: {err:?}"))?
+    .context("writer failed")?;
 
   Ok(())
 }

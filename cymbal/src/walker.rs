@@ -39,12 +39,14 @@ impl Walker {
 
     let stdout = child.stdout.take().context("stdout")?;
 
-    std::thread::spawn(move || {
+    std::thread::spawn(move || -> Result<(), anyhow::Error> {
       for line in BufReader::new(stdout).split(b'\0') {
         if let Ok(line) = line.map(OsString::from_vec).map(PathBuf::from) {
-          send.send(line).expect("failed to send");
+          send.send(line).context("failed to send")?;
         };
       }
+
+      Ok(())
     });
 
     Self { files: recv }.ok()
