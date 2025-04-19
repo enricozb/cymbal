@@ -1,9 +1,10 @@
 use std::{
-  collections::{HashMap, HashSet},
+  collections::HashSet,
   path::{Path, PathBuf},
 };
 
 use anyhow::Context;
+use indexmap::IndexMap;
 use streaming_iterator::StreamingIterator;
 use tree_sitter::{Parser as TreeSitterParser, QueryCursor, QueryMatch};
 
@@ -16,7 +17,7 @@ use crate::{
 pub struct Parser<'a> {
   path: PathBuf,
   language: Language,
-  queries: &'a HashMap<SymbolKind, Vec<Query>>,
+  queries: &'a IndexMap<SymbolKind, Vec<Query>>,
 }
 
 impl<'a> Parser<'a> {

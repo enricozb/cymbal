@@ -167,6 +167,13 @@ Additionally, each query can be garnished with a `leading` and/or `trailing`
 text. These are templates that are hydrated using captures from the tree-sitter
 query, such as in the queries for `method` above.
 
+Lastly, the order of the symbols also indicates their priority. `cymbal` will
+only emit one symbol per position per file. That is if two queries match at the
+same byte in a file, only the query appearing earlier in the configuration will
+be emitted. This is useful, for example, for capturing methods along with their
+class or struct as context, instead of capturing them as top-level functions.
+See the rust `method` query for an example.
+
 [1]: https://asciinema.org/a/MzqFoRPvOqTztcuUg1PGWnUup
 [2]: https://github.com/junegunn/fzf
 [3]: https://toml.io/en/

@@ -3,6 +3,7 @@ pub mod raw;
 use std::{collections::HashMap, sync::LazyLock};
 
 use clap::ValueEnum;
+use indexmap::IndexMap;
 use serde::Deserialize;
 use tree_sitter::{Language as TreeSitterLanguage, Query as TreeSitterQuery};
 
@@ -18,7 +19,7 @@ pub struct Config {
 
 pub struct LanguageQueries {
   /// Queries for symbols that should be searched for.
-  pub queries: HashMap<SymbolKind, Vec<Query>>,
+  pub queries: IndexMap<SymbolKind, Vec<Query>>,
 }
 
 pub struct Query {

@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use anyhow::Context;
+use indexmap::IndexMap;
 use serde::Deserialize;
 use tree_sitter::{Language as TreeSitterLanguage, Query as TreeSitterQuery};
 
@@ -23,7 +24,7 @@ pub struct RawConfig {
 #[derive(Clone, Deserialize)]
 pub struct RawLanguageQueries {
   #[serde(flatten)]
-  queries: HashMap<SymbolKind, OneOrMany<RawQuery>>,
+  queries: IndexMap<SymbolKind, OneOrMany<RawQuery>>,
 }
 
 #[derive(Clone, Deserialize)]
@@ -70,7 +71,7 @@ impl From<RawConfig> for Config {
           Lazy::new(Box::new(move || {
             let ts_language = language.as_tree_sitter();
 
-            let queries: HashMap<SymbolKind, Vec<Query>> = language_config
+            let queries: IndexMap<SymbolKind, Vec<Query>> = language_config
               .queries
               .into_iter()
               .map(|(symbol_kind, queries)| {

@@ -39,7 +39,10 @@ type = '(type_item name: (type_identifier) @symbol)'
 enum = '(enum_item name: (type_identifier) @symbol)'
 struct = '(struct_item name: (type_identifier) @symbol)'
 trait = '(trait_item name: (type_identifier) @symbol)'
-method = '(declaration_list (function_item name: (identifier) @symbol))'
+method = [
+  { leading = '{type}::', query = '(impl_item type: _ @type body: (declaration_list (function_item name: (identifier) @symbol)))' },
+  '(declaration_list (function_item name: (identifier) @symbol))',
+]
 function = '(function_item name: (identifier) @symbol)'
 macro = '(macro_definition name: (identifier) @symbol)'
 impl = [
