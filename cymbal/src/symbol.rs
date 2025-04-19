@@ -63,6 +63,8 @@ impl Default for Kind {
 impl Kind {
   #[rustfmt::skip]
   pub fn colored_abbreviation(self) -> &'static str {
+    // TODO(enricozb): have some macro generate this to automatically pad all
+    // symbols.
     // Note: these strings must all have the same printable length.
     match self {
       Self::Module    => color!("(mod)   ", yellow),
@@ -76,10 +78,10 @@ impl Kind {
       Self::Enum      => color!("(enum)  ", cyan),
       Self::Union     => color!("(union) ", cyan),
 
-      Self::Alias     => color!("(alias)", blue),
-      Self::Interface => color!("(inter)", blue),
-      Self::Trait     => color!("(trait)", blue),
-      Self::Type      => color!("(type) ", blue),
+      Self::Alias     => color!("(alias) ", blue),
+      Self::Interface => color!("(inter) ", blue),
+      Self::Trait     => color!("(trait) ", blue),
+      Self::Type      => color!("(type)  ", blue),
 
       Self::Function  => color!("(func)  ", magenta),
       Self::Method    => color!("(method)", magenta),
