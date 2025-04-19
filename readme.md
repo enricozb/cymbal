@@ -4,17 +4,17 @@
 `cymbal` lists all symbols in a codebase. For example,
 ```
 $ cymbal --delimiter ' ' --separator \n
-(impl)   ./cymbal/src/ext.rs 10 20  ResultExt
-(impl)   ./cymbal/src/ext.rs 31 20  OptionExt
-(enum)   ./cymbal/src/config.rs 19 10  Language
-(func)   ./cymbal/src/args.rs 82 6  raw_config
-(func)   ./cymbal/src/args.rs 140 10  num_threads
-(struct) ./cymbal/src/symbol.rs 6 12  Symbol
-(func)   ./cymbal/src/text.rs 10 10  new
-(struct) ./cymbal/src/cache.rs 16 12  Cache
-(struct) ./cymbal/src/cache.rs 22 12  FileInfo
-(struct) ./cymbal/src/text.rs 16 12  Span
-(impl)   ./cymbal/src/text.rs 9 6  Loc
+(rs) (impl)   ./cymbal/src/ext.rs 10 20  ResultExt
+(rs) (impl)   ./cymbal/src/ext.rs 31 20  OptionExt
+(rs) (enum)   ./cymbal/src/config.rs 19 10  Language
+(rs) (func)   ./cymbal/src/args.rs 82 6  raw_config
+(rs) (func)   ./cymbal/src/args.rs 140 10  num_threads
+(rs) (struct) ./cymbal/src/symbol.rs 6 12  Symbol
+(rs) (func)   ./cymbal/src/text.rs 10 10  new
+(rs) (struct) ./cymbal/src/cache.rs 16 12  Cache
+(rs) (struct) ./cymbal/src/cache.rs 22 12  FileInfo
+(rs) (struct) ./cymbal/src/text.rs 16 12  Span
+(rs) (impl)   ./cymbal/src/text.rs 9 6  Loc
 ...
 ```
 
@@ -29,9 +29,9 @@ function symbol-search -d "shows an fzf menu with symbols at the current directo
     --delimiter \u0c \
     --read0 \
     --ansi \
-    --preview='bat {2} --color always --style=numbers,snip,header --highlight-line {3} --line-range {3}:+100' \
+    --preview='bat {3} --color always --style=numbers,snip,header --highlight-line {4} --line-range {4}:+100' \
     --reverse \
-    --with-nth='{1} {5,6,7}' \
+    --with-nth='{1} {2} {6,7,8}' \
     --nth=2 \
     --with-shell='bash -c' \
     --bind=tab:down \
@@ -48,7 +48,7 @@ function symbol-search -d "shows an fzf menu with symbols at the current directo
       else
         echo "2"
       fi
-     )' | awk -v FS=\u0c '{ print $2, $3, $4 }'
+     )' | awk -v FS=\u0c '{ print $3, $4, $5 }'
 end
 
 function symbol-search-open -d "opens a kak instance after a symbol search"
