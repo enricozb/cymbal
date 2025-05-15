@@ -62,6 +62,10 @@ type = '(const_declaration (identifier) @symbol)'
 module = '(import_declaration alias: (identifier) @symbol)'
 
 [python]
+method = [
+  { leading = '{class}.', query = '(class_definition name: _ @class body: (block (decorated_definition definition: (function_definition name: _ @symbol))))' },
+  { leading = '{class}.', query = '(class_definition name: _ @class body: (block (function_definition name: _ @symbol)))' }
+]
 function = '(function_definition name: (identifier) @symbol)'
 class = '(class_definition name: (identifier) @symbol)'
 
