@@ -2,7 +2,7 @@
 
 pkgs.rustPlatform.buildRustPackage rec {
   pname = "cymbal";
-  version = "0.6.3";
+  version = "0.6.4";
   src = ./.;
 
   cargoLock = {
