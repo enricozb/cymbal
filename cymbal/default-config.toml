@@ -81,7 +81,7 @@ class = '(class_definition name: (identifier) @symbol)'
 class = '(class_declaration name: (type_identifier) @symbol)'
 method = '(method_signature name: (property_identifier) @symbol)'
 function = [
-  '(function_declaration name: (identifier))',
+  '(function_declaration name: (identifier) @symbol)',
   '(program (lexical_declaration (variable_declarator name: (identifier) @symbol value: (arrow_function))))',
   '(program (export_statement (lexical_declaration (variable_declarator name: (identifier) @symbol value: (arrow_function)))))',
 ]
