@@ -29,6 +29,58 @@ method = [
 alias = '(command name: _ @command (#eq? @command "alias") . argument: _ @symbol)'
 function = '(function_definition name: _ @symbol)'
 
+[ocaml]
+function = [
+  '''
+    (value_definition
+      [
+        (let_binding pattern: (value_name) @symbol (parameter))
+        (let_binding
+          pattern: (value_name) @symbol
+          body: [(fun_expression) (function_expression)]
+        )
+      ]
+    )
+  ''',
+  # operator
+  '''
+    (value_definition
+        [
+          (let_binding pattern: (parenthesized_operator (_) @symbol) (parameter))
+          (let_binding
+            pattern: (parenthesized_operator (_) @symbol)
+            body: [(fun_expression) (function_expression)]
+          )
+        ]
+    )
+  ''',
+  '(external (value_name) @symbol)'
+]
+class = '''
+  [
+    (class_definition
+      (class_binding (class_name) @symbol)
+    )
+    (class_type_definition
+      (class_type_binding (class_type_name) @symbol)
+    )
+  ]
+'''
+type = '''
+  (type_definition
+    (type_binding
+      name: [
+        (type_constructor) @symbol
+        (type_constructor_path (type_constructor) @symbol)
+      ]
+    )
+  )
+'''
+method = '(method_definition (method_name) @symbol)'
+impl = '(module_type_path (module_type_name) @symbol)'
+module = '(module_definition (module_binding (module_name) @symbol))'
+interface = '(module_type_definition (module_type_name) @symbol)'
+
 [rust]
 constant = [
   '(static_item name: (identifier) @symbol)',
