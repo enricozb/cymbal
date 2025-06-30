@@ -130,6 +130,8 @@ class = '(class_definition name: (identifier) @symbol)'
 # const = "variable.other.constant.declaration.go - meta.block.go"
 
 [typescript]
+type = '(type_alias_declaration name: _ @symbol)'
+interface = '(interface_declaration name: _ @symbol)'
 class = '(class_declaration name: (type_identifier) @symbol)'
 method = '(method_signature name: (property_identifier) @symbol)'
 function = [
