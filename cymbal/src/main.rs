@@ -26,6 +26,10 @@ use crate::{args::Args, ext::Leak, walker::Walker, worker::Worker, writer::Write
 fn main() -> Result<(), anyhow::Error> {
   let args = Args::parse();
 
+  if args.show_config_paths {
+    return args.show_config_paths();
+  }
+
   match cymbal(&args) {
     Err(err) if args.debug => Err(err),
     _ => Ok(()),

@@ -1,14 +1,11 @@
-use std::{
-  borrow::Cow,
-  path::{Path, PathBuf},
-};
+use std::path::{Path, PathBuf};
 
 use anyhow::Context;
 use clap::Parser;
 
 use crate::{
   cache::Cache,
-  config::{raw::RawConfig, Config, Language},
+  config::{raw::RawConfig, loader::ConfigLoader, Config, Language},
   ext::{IntoExt, OptionExt, ResultExt},
 };
 
@@ -19,8 +16,12 @@ pub struct Args {
   ///
   /// This can either be a path to a .toml file or a TOML string.
   ///
-  /// The default configuration will be applied if this argument is not
-  /// provided or if it is the empty string.
+  /// Configs are merged in this order:
+  /// 1. Default embedded config (lowest precedence)
+  /// 2. Global config (~/.config/cymbal/config.toml or equivalent)
+  /// 3. User home config (~/.cymbal.toml)
+  /// 4. Project config (.cymbal.toml or .cymbal/config.toml, searched upward)
+  /// 5. This explicit config argument (highest precedence)
   #[arg(short, long)]
   config: Option<String>,
   /// Directory to cache parsed symbols.
@@ -90,25 +91,18 @@ pub struct Args {
   /// Print errors to standard error.
   #[arg(long, default_value_t)]
   pub debug: bool,
+  /// Show detected config file paths and exit.
+  #[arg(long)]
+  pub show_config_paths: bool,
 }
 
 impl Args {
   fn raw_config(&self) -> Result<RawConfig, anyhow::Error> {
-    if let Some(config) = &self.config {
-      let config_content: Cow<str> = if config.ends_with(".toml") {
-        std::fs::read_to_string(config)
-          .context("failed to read config file")?
-          .into()
-      } else {
-        config.into()
-      };
+    let loader = ConfigLoader::new();
 
-      if !config_content.is_empty() {
-        return toml::from_str(&config_content).context("failed to parse config");
-      }
-    }
+    let user_specified = self.config.as_deref().filter(|s| !s.is_empty());
 
-    RawConfig::default().ok()
+    loader.load_merged_config(user_specified)
   }
 
   fn language(&self) -> Result<Option<Language>, anyhow::Error> {
@@ -158,5 +152,55 @@ impl Args {
       .threads
       .or_else(|| std::thread::available_parallelism().map(usize::from).ok())
       .unwrap_or(8)
+  }
+
+  pub fn show_config_paths(&self) -> Result<(), anyhow::Error> {
+    let loader = ConfigLoader::new();
+    let paths = loader.get_config_paths();
+
+    println!("Config resolution order (lowest to highest precedence):");
+    println!("1. Default embedded config: [built-in]");
+
+    if let Some(global) = &paths.global_config {
+      let status = if global.exists() { "✓ exists" } else { "✗ not found" };
+      println!("2. Global config: {} ({})", global.display(), status);
+    } else {
+      println!("2. Global config: [not detected]");
+    }
+
+    if let Some(user) = &paths.user_config {
+      let status = if user.exists() { "✓ exists" } else { "✗ not found" };
+      println!("3. User config: {} ({})", user.display(), status);
+    } else {
+      println!("3. User config: [not detected]");
+    }
+
+    if let Some(project) = &paths.project_config {
+      let status = if project.exists() { "✓ exists" } else { "✗ not found" };
+      println!("4. Project config: {} ({})", project.display(), status);
+    } else {
+      println!("4. Project config: [not found]");
+    }
+
+    if let Some(user_specified) = &self.config {
+      if !user_specified.is_empty() {
+        println!("5. User-specified config: {} (via --config)", user_specified);
+      }
+    } else {
+      println!("5. User-specified config: [not provided]");
+    }
+
+    println!("\nActive config files (will be merged in order):");
+    for path in paths.iter_existing() {
+      println!("  {}", path.display());
+    }
+
+    if let Some(user_specified) = &self.config {
+      if !user_specified.is_empty() {
+        println!("  {} (user-specified)", user_specified);
+      }
+    }
+
+    Ok(())
   }
 }

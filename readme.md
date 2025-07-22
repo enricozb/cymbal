@@ -77,7 +77,12 @@ Options:
 
           This can either be a path to a .toml file or a TOML string.
 
-          The default configuration will be applied if this argument is not provided or if it is the empty string.
+          Configs are merged in this order:
+          1. Default embedded config (lowest precedence)
+          2. Global config (~/.config/cymbal/config.toml or equivalent)
+          3. User home config (~/.cymbal.toml)
+          4. Project config (.cymbal.toml or .cymbal/config.toml, searched upward)
+          5. This explicit config argument (highest precedence)
 
       --cache-dir <CACHE_DIR>
           Directory to cache parsed symbols.
@@ -138,6 +143,17 @@ Options:
 ## Configuration
 `cymbal` is configured with [TOML][3] on a per-language basis. See
 [default-config.toml][4] for the default configuration.
+
+### Config File Precedence
+`cymbal` supports multiple configuration files that are merged in the following order (highest precedence last):
+
+1. **Default embedded config**: Built-in configuration for all supported languages
+2. **Global config**: `~/.config/cymbal/config.toml` (or platform equivalent)
+3. **User home config**: `~/.cymbal.toml`
+4. **Project config**: `.cymbal.toml` or `.cymbal/config.toml` (searched from current directory upward)
+5. **Explicit config**: Via `--config` command line argument
+
+Later configurations override earlier ones on a per-language basis. Use `--show-config-paths` to see which config files are detected and will be used.
 
 Each language has a set of queries for different kinds of symbols that can be
 found in that language. For example for C++,
