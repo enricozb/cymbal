@@ -1,4 +1,5 @@
 pub mod raw;
+pub mod loader;
 
 use std::{collections::HashMap, sync::LazyLock};
 
