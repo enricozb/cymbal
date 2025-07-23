@@ -82,6 +82,7 @@ Language! {
   { "(fish)", Fish, green, ["fish"], tree_sitter_fish::language() },
   { "(go)", Go, cyan, ["go"], tree_sitter_go::LANGUAGE.into() },
   { "(hs)", Haskell, magenta, ["hs"], tree_sitter_haskell::LANGUAGE.into() },
+  { "(json)", Json, green, ["json"], tree_sitter_json::LANGUAGE.into() },
   { "(odin)", Odin, blue, ["odin"], tree_sitter_odin::LANGUAGE.into() },
   { "(ml)", Ocaml, yellow, ["ml"], tree_sitter_ocaml::LANGUAGE_OCAML.into() },
   { "(py)", Python, bright_yellow, ["py"], tree_sitter_python::LANGUAGE.into() },
