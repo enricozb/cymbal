@@ -1,10 +1,14 @@
 use std::path::Path;
 
 use anyhow::{Context, Result};
+use futures::Stream;
 use sqlx::{SqlitePool, sqlite::SqliteConnectOptions};
 
-use crate::ext::ResultExt;
+use crate::{ext::ResultExt, symbol::FileInfo};
 
+type SqlxResult<T> = Result<T, sqlx::Error>;
+
+#[derive(Clone)]
 pub struct Cache {
   pool: SqlitePool,
 }
@@ -25,6 +29,10 @@ impl Cache {
       .create_if_missing(true);
 
     Self::from_options(options).await
+  }
+
+  pub fn symbols(&self, filepath: &Path) -> impl Stream<Item = SqlxResult<FileInfo>> {
+    sqlx::query_as("SELECT * FROM file").fetch(&self.pool)
   }
 
   async fn from_options(options: SqliteConnectOptions) -> Result<Self> {
