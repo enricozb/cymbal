@@ -5,21 +5,24 @@ use tokio::task::JoinSet;
 use walkdir::{DirEntry, WalkDir};
 
 use crate::cache::Cache;
+use crate::config::Config;
+use crate::ext::Leak;
 use crate::worker::Worker;
 
 pub struct Walker<'a> {
-  cache: Cache,
   path: &'a Path,
+  cache: Cache,
+  config: Config,
 }
 
 impl<'a> Walker<'a> {
-  pub fn new(cache: Cache, path: &'a Path) -> Self {
-    Self { cache, path }
+  pub fn new(path: &'a Path, cache: Cache, config: Config) -> Self {
+    Self { path, cache, config }
   }
 
-  pub async fn run(&self) {
+  pub async fn run(self) {
+    let config = self.config.leak();
     let mut tasks = JoinSet::new();
-
     let walker = WalkDir::new(self.path)
       .into_iter()
       .filter_map(Result::ok)
@@ -29,7 +32,7 @@ impl<'a> Walker<'a> {
     for file in walker {
       let cache = self.cache.clone();
 
-      tasks.spawn(async move { Worker::new(file, cache).run().await });
+      tasks.spawn(async move { Worker::new(file, cache, config).run().await });
     }
 
     tasks.join_all().await;

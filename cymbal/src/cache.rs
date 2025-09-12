@@ -1,10 +1,13 @@
 use std::path::Path;
 
 use anyhow::{Context, Result};
-use futures::Stream;
-use sqlx::{SqlitePool, sqlite::SqliteConnectOptions};
+use futures::{Stream, StreamExt};
+use sqlx::{Either, SqlitePool, sqlite::SqliteConnectOptions};
 
-use crate::{ext::ResultExt, symbol::FileInfo};
+use crate::{
+  ext::{Ignore, PathExt, ResultExt},
+  symbol::{FileInfo, Symbol},
+};
 
 type SqlxResult<T> = Result<T, sqlx::Error>;
 
@@ -24,15 +27,56 @@ impl Cache {
 
   pub async fn from_dirpath(cache_dirpath: &Path) -> Result<Self> {
     let cache_filepath = cache_dirpath.join(Self::CACHE_FILENAME);
-    let options = SqliteConnectOptions::new()
-      .filename(cache_filepath)
-      .create_if_missing(true);
+    let options = SqliteConnectOptions::new().filename(cache_filepath).create_if_missing(true);
 
     Self::from_options(options).await
   }
 
-  pub fn symbols(&self, filepath: &Path) -> impl Stream<Item = SqlxResult<FileInfo>> {
-    sqlx::query_as("SELECT * FROM file").fetch(&self.pool)
+  pub async fn get_file_info(&self, file_path: &Path) -> Result<Option<FileInfo>> {
+    sqlx::query_as("SELECT * FROM file WHERE file.path = $1")
+      .bind(file_path.to_string_lossy().into_owned())
+      .fetch_optional(&self.pool)
+      .await
+      .context("failed to get file info")
+  }
+
+  pub async fn insert_file_info(&self, file_info: FileInfo) -> Result<()> {
+    sqlx::query(
+      "
+        INSERT INTO file (path, modified, is_fully_parsed)
+          VALUES ($1, $2, $3)
+        ON CONFLICT DO UPDATE SET
+          modified = excluded.modified,
+          is_fully_parsed = excluded.is_fully_parsed
+      ",
+    )
+    .bind(file_info.path)
+    .bind(file_info.modified)
+    .bind(file_info.is_fully_parsed)
+    .execute(&self.pool)
+    .await
+    .map(Ignore::ignore)
+    .context("failed to insert file info")
+  }
+
+  pub async fn set_is_fully_parsed(&self, file_path: &Path) -> Result<()> {
+    sqlx::query("UPDATE file SET is_fully_parsed = TRUE WHERE path = $1")
+      .bind(file_path.into_owned_string_lossy())
+      .execute(&self.pool)
+      .await
+      .map(Ignore::ignore)
+      .context("failed to set is_fully_parsed for file info")
+  }
+
+  pub fn symbols(&self, file_path: &Path) -> impl Stream<Item = SqlxResult<Symbol>> {
+    // does sqlx not have streams
+    sqlx::query_as("SELECT * FROM symbol WHERE symbol.file_path = $1")
+      .bind(file_path.into_owned_string_lossy())
+      .fetch_many(&self.pool)
+      .filter_map(async |row| row.map(Either::right).transpose())
+
+    // sqlx::Either vs futures::Either
+    // brb gotta grab charger
   }
 
   async fn from_options(options: SqliteConnectOptions) -> Result<Self> {
