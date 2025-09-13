@@ -10,7 +10,8 @@ CREATE TABLE file (
 
 CREATE TABLE symbol (
   file_path REFERENCES file (path) NOT NULL,
-  kind TEXT NOT NULL,
+  kind INTEGER NOT NULL,
+  language INTEGER NOT NULL,
   line INTEGER NOT NULL,
   column INTEGER NOT NULL,
   content TEXT NOT NULL,

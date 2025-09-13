@@ -1,68 +1,70 @@
 use std::path::PathBuf;
 
-use anyhow::{Context, Result};
+use anyhow::Result;
 use chrono::{DateTime, Utc};
 use futures::StreamExt;
-use futures::future::Either;
 
 use crate::cache::Cache;
-use crate::config::Config;
+use crate::config::{Config, Language};
 use crate::ext::{IntoExt, ResultExt};
 use crate::parser::Parser;
 use crate::symbol::FileInfo;
+use crate::symbol_stream::{CacheSymbolStream, ParserSymbolStream, SymbolStream};
 
 pub struct Worker {
   file_path: PathBuf,
+  language: Language,
   cache: Cache,
   config: &'static Config,
 }
 
-enum SymbolStream {
-  FromCache,
-  FromFile,
-}
-
 impl Worker {
-  pub fn new(file_path: PathBuf, cache: Cache, config: &'static Config) -> Self {
-    Self { file_path, cache, config }
+  pub fn new(file_path: PathBuf, language: Language, cache: Cache, config: &'static Config) -> Self {
+    Self {
+      file_path,
+      language,
+      cache,
+      config,
+    }
   }
 
-  pub async fn run(&self) -> Result<()> {
-    // TODO: try using tokio::fs::metadata
+  async fn symbol_stream(&self) -> Result<SymbolStream<impl ParserSymbolStream, impl CacheSymbolStream>> {
     let file_modified = self.file_path.metadata()?.modified()?.convert::<DateTime<Utc>>();
     let cache_file_info = self.cache.get_file_info(&self.file_path).await?;
     let cache_file_modified = cache_file_info.map(|file_info| file_info.modified);
 
-    // one of the Either does not correctly implement the trait for some reason.
-    // yea
-    // Stream<Item = Result<Symbol>>
+    if cache_file_modified.is_none_or(|cache_file_modified| cache_file_modified != file_modified) {
+      let parser = Parser::new(&self.file_path, self.language, self.config);
 
-    let symbol_stream = if cache_file_modified.is_none_or(|cache_file_modified| cache_file_modified != file_modified) {
-      let file_info = FileInfo::new(&self.file_path, file_modified);
-      let Some(parser) = Parser::new(&self.file_path, self.config) else { return ().ok() };
-
-      self.cache.insert_file_info(file_info).await?;
-
-      Either::Left(parser.symbols().await?.map(ResultExt::ok::<anyhow::Error>))
+      SymbolStream::FromParser(parser.symbol_stream().await?)
     } else {
-      Either::Right(
-        self
-          .cache
-          .symbols(&self.file_path)
-          .map(|symbol| symbol.context("failed to fetch symbol")),
-      )
-    };
+      SymbolStream::FromCache(self.cache.symbols(&self.file_path))
+    }
+    .ok()
+  }
 
-    futures::pin_mut!(symbol_stream);
+  pub async fn run(&self) -> Result<()> {
+    let symbol_stream = self.symbol_stream().await?;
 
-    // causes the `next` call to fail to compile b/c Either only impls Stream if each side does with the same Item
-    while let Some(symbol) = symbol_stream.next().await {
-      if let Ok(symbol) = symbol {
-        println!("{}", symbol.content);
+    match symbol_stream {
+      SymbolStream::FromParser(parser_symbol_stream) => {
+        futures::pin_mut!(parser_symbol_stream);
+        while let Some(symbol) = parser_symbol_stream.next().await {
+          // self.cache.insert_symbol(&self.file_path, &symbol).await?;
+
+          println!("{}", symbol.content);
+        }
+
+        // self.cache.set_is_fully_parsed(&self.file_path).await?;
+      }
+
+      SymbolStream::FromCache(cache_symbol_stream) => {
+        futures::pin_mut!(cache_symbol_stream);
+        while let Some(symbol) = cache_symbol_stream.next().await {
+          println!("{:?}", symbol.map(|symbol| symbol.content.clone()));
+        }
       }
     }
-
-    self.cache.set_is_fully_parsed(&self.file_path).await?;
 
     ().ok()
   }

@@ -1,11 +1,11 @@
 use std::path::Path;
 
 use anyhow::Result;
+use ignore::{DirEntry, Walk};
 use tokio::task::JoinSet;
-use walkdir::{DirEntry, WalkDir};
 
 use crate::cache::Cache;
-use crate::config::Config;
+use crate::config::{Config, Language};
 use crate::ext::Leak;
 use crate::worker::Worker;
 
@@ -23,16 +23,20 @@ impl<'a> Walker<'a> {
   pub async fn run(self) {
     let config = self.config.leak();
     let mut tasks = JoinSet::new();
-    let walker = WalkDir::new(self.path)
-      .into_iter()
+    let walker = Walk::new(self.path)
       .filter_map(Result::ok)
       .map(DirEntry::into_path)
-      .filter(|path| path.is_file());
+      .filter(|path| path.is_file())
+      .filter_map(|file_path| Language::from_file_path(&file_path).map(|language| (file_path, language)));
 
-    for file in walker {
+    for (file_path, language) in walker {
       let cache = self.cache.clone();
 
-      tasks.spawn(async move { Worker::new(file, cache, config).run().await });
+      tasks.spawn(async move {
+        if let Err(err) = Worker::new(file_path, language, cache, config).run().await {
+          println!("{err:?}");
+        }
+      });
     }
 
     tasks.join_all().await;

@@ -96,6 +96,10 @@ macro_rules! Language {
           _ => None,
         }
       }
+
+      pub fn from_file_path<P: AsRef<Path>>(file_path: P) -> Option<Self> {
+        Self::from_extension(file_path.as_ref().extension()?.to_str()?)
+      }
     }
   };
 }

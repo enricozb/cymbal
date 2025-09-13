@@ -9,15 +9,13 @@ use crate::{
   symbol::{FileInfo, Symbol},
 };
 
-type SqlxResult<T> = Result<T, sqlx::Error>;
-
 #[derive(Clone)]
 pub struct Cache {
   pool: SqlitePool,
 }
 
 impl Cache {
-  const CACHE_FILENAME: &'static str = "cymbal-cache.sqlite";
+  const CACHE_FILE_NAME: &'static str = "cymbal-cache.sqlite";
 
   pub async fn new() -> Result<Self> {
     let options = SqliteConnectOptions::new().in_memory(true);
@@ -26,7 +24,7 @@ impl Cache {
   }
 
   pub async fn from_dirpath(cache_dirpath: &Path) -> Result<Self> {
-    let cache_filepath = cache_dirpath.join(Self::CACHE_FILENAME);
+    let cache_filepath = cache_dirpath.join(Self::CACHE_FILE_NAME);
     let options = SqliteConnectOptions::new().filename(cache_filepath).create_if_missing(true);
 
     Self::from_options(options).await
@@ -40,7 +38,7 @@ impl Cache {
       .context("failed to get file info")
   }
 
-  pub async fn insert_file_info(&self, file_info: FileInfo) -> Result<()> {
+  pub async fn insert_file_info(&self, file_info: &FileInfo) -> Result<()> {
     sqlx::query(
       "
         INSERT INTO file (path, modified, is_fully_parsed)
@@ -50,9 +48,31 @@ impl Cache {
           is_fully_parsed = excluded.is_fully_parsed
       ",
     )
-    .bind(file_info.path)
+    .bind(&file_info.path)
     .bind(file_info.modified)
     .bind(file_info.is_fully_parsed)
+    .execute(&self.pool)
+    .await
+    .map(Ignore::ignore)
+    .context("failed to insert file info")
+  }
+
+  pub async fn insert_symbol(&self, file_path: &Path, symbol: &Symbol) -> Result<()> {
+    sqlx::query(
+      "
+        INSERT INTO symbol (file_path, kind, language, line, column, content, leading, trailing)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        ON CONFLICT DO NOTHING
+      ",
+    )
+    .bind(file_path.to_string_lossy())
+    .bind(symbol.kind)
+    .bind(symbol.language)
+    .bind(symbol.line as i64)
+    .bind(symbol.column as i64)
+    .bind(&symbol.content)
+    .bind(&symbol.leading)
+    .bind(&symbol.trailing)
     .execute(&self.pool)
     .await
     .map(Ignore::ignore)
@@ -68,15 +88,11 @@ impl Cache {
       .context("failed to set is_fully_parsed for file info")
   }
 
-  pub fn symbols(&self, file_path: &Path) -> impl Stream<Item = SqlxResult<Symbol>> {
-    // does sqlx not have streams
+  pub fn symbols(&self, file_path: &Path) -> impl Stream<Item = Result<Symbol, sqlx::Error>> {
     sqlx::query_as("SELECT * FROM symbol WHERE symbol.file_path = $1")
       .bind(file_path.into_owned_string_lossy())
       .fetch_many(&self.pool)
       .filter_map(async |row| row.map(Either::right).transpose())
-
-    // sqlx::Either vs futures::Either
-    // brb gotta grab charger
   }
 
   async fn from_options(options: SqliteConnectOptions) -> Result<Self> {
@@ -94,6 +110,10 @@ impl Cache {
     sqlx::migrate!("src/cache/migrations")
       .run(&self.pool)
       .await
-      .context("failed to migrate")
+      .context("failed to migrate")?;
+
+    println!("initialized...");
+
+    ().ok()
   }
 }

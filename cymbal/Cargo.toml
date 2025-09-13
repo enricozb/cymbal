@@ -31,6 +31,7 @@ tree-sitter-json = "0.24.8"
 walkdir = "2.5.0"
 indexmap = { version = "2.11.1", features = ["serde"] }
 serde = { version = "1.0.219", features = ["derive"] }
+ignore = { version = "0.4.23", features = ["simd-accel"] }
 
 [lints]
 workspace = true

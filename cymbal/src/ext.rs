@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use anyhow::{Context, Result};
-use futures::{Stream, future::Either};
+use futures::Stream;
 use serde::de::DeserializeOwned;
 use tree_sitter::Parser as TreeSitterParser;
 
@@ -11,6 +11,14 @@ use crate::config::Language;
 pub impl<T> T {
   fn ok<E>(self) -> Result<T, E> {
     Ok(self)
+  }
+
+  fn into_anyhow<O, E>(self) -> Result<O>
+  where
+    E: std::error::Error + Sync + Send + 'static,
+    Self: Into<Result<O, E>>,
+  {
+    self.into()?.ok()
   }
 }
 
