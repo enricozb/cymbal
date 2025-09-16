@@ -24,7 +24,7 @@ impl FileInfo {
   }
 }
 
-#[derive(sqlx::FromRow)]
+#[derive(sqlx::FromRow, Debug)]
 pub struct Symbol {
   pub kind: Kind,
   pub language: Language,

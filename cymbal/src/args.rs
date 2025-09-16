@@ -1,6 +1,7 @@
+use std::num::NonZero;
 use std::path::PathBuf;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use clap::Parser;
 
 use crate::cache::Cache;
@@ -34,6 +35,12 @@ pub struct Args {
   /// is used.
   #[arg(default_value = ".")]
   pub search_path: PathBuf,
+  /// The number of parser tasks, or roughly the amount of parallelism.
+  #[arg(long = "workers")]
+  pub num_workers: Option<NonZero<usize>>,
+  /// The maximum number of files to enqueue at any given time.
+  #[arg(long = "buffer", default_value_t = 256)]
+  pub channel_bound: usize,
 }
 
 impl Args {
@@ -50,6 +57,13 @@ impl Args {
       Config::from_path(config_path).await
     } else {
       Config::default().ok()
+    }
+  }
+
+  pub fn available_concurrency(&self) -> Result<NonZero<usize>> {
+    match self.num_workers {
+      Some(num_workers) => num_workers.ok(),
+      None => std::thread::available_parallelism().context("failed to get available parallelism"),
     }
   }
 }

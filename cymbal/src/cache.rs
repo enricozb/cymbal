@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
 use futures::{Stream, StreamExt};
@@ -18,7 +18,7 @@ impl Cache {
   const CACHE_FILE_NAME: &'static str = "cymbal-cache.sqlite";
 
   pub async fn new() -> Result<Self> {
-    let options = SqliteConnectOptions::new().in_memory(true);
+    let options = SqliteConnectOptions::new().filename("/tmp/cymbal").create_if_missing(true);
 
     Self::from_options(options).await
   }

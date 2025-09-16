@@ -1,28 +1,28 @@
-use std::path::Path;
+use std::path::PathBuf;
 
 use anyhow::Result;
 use ignore::{DirEntry, Walk};
-use tokio::task::JoinSet;
+use tokio::task::JoinHandle;
 
-use crate::cache::Cache;
-use crate::config::{Config, Language};
-use crate::ext::Leak;
-use crate::worker::Worker;
+use crate::channel::Sender;
+use crate::config::Language;
+use crate::ext::ResultExt;
 
-pub struct Walker<'a> {
-  path: &'a Path,
-  cache: Cache,
-  config: Config,
+pub struct Walker {
+  path: PathBuf,
+  sender: Sender,
 }
 
-impl<'a> Walker<'a> {
-  pub fn new(path: &'a Path, cache: Cache, config: Config) -> Self {
-    Self { path, cache, config }
+impl Walker {
+  pub fn new(path: PathBuf, sender: Sender) -> Self {
+    Self { path, sender }
   }
 
-  pub async fn run(self) {
-    let config = self.config.leak();
-    let mut tasks = JoinSet::new();
+  pub fn spawn(self) -> JoinHandle<Result<()>> {
+    tokio::spawn(self.run())
+  }
+
+  async fn run(self) -> Result<()> {
     let walker = Walk::new(self.path)
       .filter_map(Result::ok)
       .map(DirEntry::into_path)
@@ -30,15 +30,9 @@ impl<'a> Walker<'a> {
       .filter_map(|file_path| Language::from_file_path(&file_path).map(|language| (file_path, language)));
 
     for (file_path, language) in walker {
-      let cache = self.cache.clone();
-
-      tasks.spawn(async move {
-        if let Err(err) = Worker::new(file_path, language, cache, config).run().await {
-          println!("{err:?}");
-        }
-      });
+      self.sender.send((file_path, language)).await?;
     }
 
-    tasks.join_all().await;
+    ().ok()
   }
 }
