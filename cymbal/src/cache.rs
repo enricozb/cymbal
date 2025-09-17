@@ -1,11 +1,11 @@
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use anyhow::{Context, Result};
 use futures::{Stream, StreamExt};
 use sqlx::{Either, SqlitePool, sqlite::SqliteConnectOptions};
 
 use crate::{
-  ext::{Ignore, PathExt, ResultExt},
+  ext::{Ignore, IntoExt, PathExt},
   symbol::{FileInfo, Symbol},
 };
 
@@ -16,12 +16,6 @@ pub struct Cache {
 
 impl Cache {
   const CACHE_FILE_NAME: &'static str = "cymbal-cache.sqlite";
-
-  pub async fn new() -> Result<Self> {
-    let options = SqliteConnectOptions::new().filename("/tmp/cymbal").create_if_missing(true);
-
-    Self::from_options(options).await
-  }
 
   pub async fn from_dirpath(cache_dirpath: &Path) -> Result<Self> {
     let cache_filepath = cache_dirpath.join(Self::CACHE_FILE_NAME);
@@ -68,8 +62,8 @@ impl Cache {
     .bind(file_path.to_string_lossy())
     .bind(symbol.kind)
     .bind(symbol.language)
-    .bind(symbol.line as i64)
-    .bind(symbol.column as i64)
+    .bind(symbol.line)
+    .bind(symbol.column)
     .bind(&symbol.content)
     .bind(&symbol.leading)
     .bind(&symbol.trailing)
@@ -111,8 +105,6 @@ impl Cache {
       .run(&self.pool)
       .await
       .context("failed to migrate")?;
-
-    println!("initialized...");
 
     ().ok()
   }

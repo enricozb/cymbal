@@ -28,8 +28,8 @@ impl FileInfo {
 pub struct Symbol {
   pub kind: Kind,
   pub language: Language,
-  pub line: u64,
-  pub column: u64,
+  pub line: i64,
+  pub column: i64,
   pub content: String,
   pub leading: Option<String>,
   pub trailing: Option<String>,

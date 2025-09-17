@@ -1,7 +1,10 @@
 use anyhow::Result;
 use futures::{Stream, StreamExt, future::Either};
 
-use crate::{ext::ResultExt, symbol::Symbol};
+use crate::{
+  ext::{IntoExt, ResultExt},
+  symbol::Symbol,
+};
 
 pub trait ParserSymbolStream: Stream<Item = Symbol> {}
 impl<T: Stream<Item = Symbol>> ParserSymbolStream for T {}
@@ -25,7 +28,7 @@ where
 
   pub fn into_stream(self) -> impl Stream<Item = Result<Symbol>> {
     match self {
-      Self::FromParser(p) => Either::Left(p.map(ResultExt::ok)),
+      Self::FromParser(p) => Either::Left(p.map(IntoExt::ok)),
       Self::FromCache(c) => Either::Right(c.map(ResultExt::into_anyhow)),
     }
   }

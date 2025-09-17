@@ -1,4 +1,4 @@
-use std::{collections::HashSet, path::{Path, PathBuf}};
+use std::{collections::HashSet, path::Path};
 
 use anyhow::{Context, Result};
 use futures::{Stream, StreamExt};
@@ -6,7 +6,7 @@ use tree_sitter::{Parser as TreeSitterParser, Point, QueryCursor};
 
 use crate::{
   config::{Config, Language, Queries},
-  ext::{IntoStream, PathExt, ResultExt, StrExt, TreeSitterParserExt},
+  ext::{IntoExt, IteratorExt, PathExt, StrExt, TreeSitterParserExt},
   symbol::Symbol,
   utils::Lazy,
 };
@@ -67,11 +67,12 @@ impl<'a> Parser<'a> {
           let leading = query.leading().map(|t| t.render(m, content_bytes.as_slice())).and_then(Result::ok);
           let trailing = query.trailing().map(|t| t.render(m, content_bytes.as_slice())).and_then(Result::ok);
 
+          #[allow(clippy::cast_possible_wrap)]
           symbols.push(Symbol {
             kind: *kind,
             language,
-            line: row as u64 + 1,
-            column: column as u64,
+            line: row as i64 + 1,
+            column: column as i64,
             content: symbol_content_str.to_string(),
             leading,
             trailing,

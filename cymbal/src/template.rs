@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
 use tree_sitter::{Query as TreeSitterQuery, QueryMatch};
 
-use crate::ext::{OptionExt, ResultExt, StrExt};
+use crate::ext::{IntoExt, StrExt};
 
 pub struct Template {
   items: Vec<Item>,

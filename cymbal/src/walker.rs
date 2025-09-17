@@ -6,7 +6,7 @@ use tokio::task::JoinHandle;
 
 use crate::channel::Sender;
 use crate::config::Language;
-use crate::ext::ResultExt;
+use crate::ext::IntoExt;
 
 pub struct Walker {
   path: PathBuf,

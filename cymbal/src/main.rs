@@ -17,7 +17,7 @@ use clap::Parser;
 use tokio::task::JoinSet;
 
 use crate::args::Args;
-use crate::ext::{IntoExt, Leak, ResultExt};
+use crate::ext::{IntoExt, IteratorExt, Leak};
 use crate::walker::Walker;
 use crate::worker::Worker;
 
@@ -26,9 +26,8 @@ async fn main() -> Result<()> {
   let args = Args::parse();
   let cache = args.cache().await?;
   let config = args.config().await?.leak();
-  let available_concurrency = args.available_concurrency()?.convert::<usize>();
-
-  let (sender, receiver) = crate::channel::bounded(args.channel_bound);
+  let (sender, receiver) = args.channel();
+  let available_concurrency = args.concurrency()?.convert::<usize>();
 
   // TODO:
   // - synchronous walker spawning async worker tasks, joining at the end.
@@ -42,10 +41,7 @@ async fn main() -> Result<()> {
     workers.spawn(Worker::new(cache.clone(), config, receiver.clone()).run());
   }
 
-  for res in workers.join_all().await {
-    println!("worker result = {res:?}");
-  }
-  walker.await??;
+  workers.join_all().await.ok_all()?;
 
-  ().ok()
+  walker.await?
 }

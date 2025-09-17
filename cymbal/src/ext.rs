@@ -7,32 +7,55 @@ use tree_sitter::Parser as TreeSitterParser;
 
 use crate::config::Language;
 
-#[extend::ext(name=ResultExt)]
-pub impl<T> T {
-  fn ok<E>(self) -> Result<T, E> {
-    Ok(self)
-  }
-
-  fn into_anyhow<O, E>(self) -> Result<O>
-  where
-    E: std::error::Error + Sync + Send + 'static,
-    Self: Into<Result<O, E>>,
-  {
-    self.into()?.ok()
-  }
-}
-
-#[extend::ext(name=OptionExt)]
+#[extend::ext(name=IntoExt)]
 pub impl<T> T {
   fn some(self) -> Option<T> {
     Some(self)
   }
+
+  fn ok<E>(self) -> Result<T, E> {
+    Ok(self)
+  }
+
+  fn convert<U: From<T>>(self) -> U {
+    self.into()
+  }
 }
 
-#[extend::ext(name=IntoStream)]
+#[extend::ext(name=ResultExt)]
+pub impl<T, E> Result<T, E> {
+  fn into_anyhow(self) -> Result<T>
+  where
+    E: std::error::Error + Sync + Send + 'static,
+  {
+    self?.ok()
+  }
+}
+
+#[extend::ext(name=IteratorExt)]
 pub impl<T: IntoIterator> T {
+  fn ok_all<U, E>(self) -> Result<Vec<U>, E>
+  where
+    T::Item: Into<Result<U, E>>,
+  {
+    self.into_iter().map(Into::into).collect()
+  }
+
   fn stream(self) -> impl Stream<Item = <T::IntoIter as std::iter::Iterator>::Item> {
     futures::stream::iter(self)
+  }
+}
+
+#[extend::ext(name=OptionExt)]
+pub impl<T> Option<T> {
+  async fn into_future<U>(self) -> Option<U>
+  where
+    T: Future<Output = U>,
+  {
+    match self {
+      Some(x) => Some(x.await),
+      None => None,
+    }
   }
 }
 
@@ -70,17 +93,10 @@ pub impl<T: AsRef<Path>> T {
   }
 }
 
-#[extend::ext(name=IntoExt)]
-pub impl<T> T {
-  fn convert<U: From<T>>(self) -> U {
-    self.into()
-  }
-}
-
 #[extend::ext(name=StrExt)]
 pub impl<'a> &'a [u8] {
   fn to_str(&self) -> Option<&'a str> {
-    std::str::from_utf8(&self).ok()
+    std::str::from_utf8(self).ok()
   }
 }
 

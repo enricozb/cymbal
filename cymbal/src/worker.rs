@@ -3,28 +3,33 @@ use std::path::Path;
 use anyhow::Result;
 use chrono::{DateTime, Utc};
 use futures::StreamExt;
-use tokio::task::JoinHandle;
 
 use crate::cache::Cache;
 use crate::channel::Receiver;
 use crate::config::{Config, Language};
-use crate::ext::{IntoExt, ResultExt};
+use crate::ext::IntoExt;
 use crate::parser::Parser;
 use crate::symbol_stream::{CacheSymbolStream, ParserSymbolStream, SymbolStream};
 
 pub struct Worker {
-  cache: Cache,
+  cache: Option<Cache>,
   config: &'static Config,
   receiver: Receiver,
 }
 
 impl Worker {
-  pub fn new(cache: Cache, config: &'static Config, receiver: Receiver) -> Self {
+  pub fn new(cache: Option<Cache>, config: &'static Config, receiver: Receiver) -> Self {
     Self { cache, config, receiver }
   }
 
-  pub fn spawn(self) -> JoinHandle<Result<()>> {
-    tokio::spawn(self.run())
+  async fn is_cached<'a>(&'a self, file_path: &Path) -> Result<Option<&'a Cache>> {
+    let Some(cache) = &self.cache else { return None.ok() };
+    let file_modified = file_path.metadata()?.modified()?.convert::<DateTime<Utc>>();
+    let cache_file_info = cache.get_file_info(file_path).await?;
+    let cache_file_modified = cache_file_info.map(|file_info| file_info.modified);
+    let is_cached = cache_file_modified.is_none_or(|cache_file_modified| cache_file_modified != file_modified);
+
+    if is_cached { cache.some().ok() } else { None.ok() }
   }
 
   async fn symbol_stream(
@@ -32,16 +37,12 @@ impl Worker {
     file_path: &Path,
     language: Language,
   ) -> Result<SymbolStream<impl ParserSymbolStream, impl CacheSymbolStream>> {
-    let file_modified = file_path.metadata()?.modified()?.convert::<DateTime<Utc>>();
-    let cache_file_info = self.cache.get_file_info(file_path).await?;
-    let cache_file_modified = cache_file_info.map(|file_info| file_info.modified);
-
-    if cache_file_modified.is_none_or(|cache_file_modified| cache_file_modified != file_modified) {
+    if let Some(cache) = self.is_cached(file_path).await? {
+      SymbolStream::FromCache(cache.symbols(file_path))
+    } else {
       let parser = Parser::new(file_path, language, self.config);
 
       SymbolStream::FromParser(parser.symbol_stream().await?)
-    } else {
-      SymbolStream::FromCache(self.cache.symbols(file_path))
     }
     .ok()
   }
@@ -54,14 +55,10 @@ impl Worker {
       futures::pin_mut!(symbol_stream);
 
       while let Some(symbol) = symbol_stream.next().await {
-        println!("{file_path:?} {symbol:?}");
+        println!("{symbol:?}");
       }
     }
 
-    println!("worker channel closed?");
-
     ().ok()
   }
-
-  // async fn run(&self) -> Result<()> «…»󠅫︊󠄐󠄐󠄐󠄐󠅜󠅕󠅤󠄐󠅣󠅩󠅝󠅒󠅟󠅜󠅏󠅣󠅤󠅢󠅕󠅑󠅝󠄐󠄭󠄐󠅣󠅕󠅜󠅖󠄞󠅣󠅩󠅝󠅒󠅟󠅜󠅏󠅣󠅤󠅢󠅕󠅑󠅝󠄘󠄙󠄞󠅑󠅧󠅑󠅙󠅤󠄯󠄫︊︊󠄐󠄐󠄐󠄐󠅝󠅑󠅤󠅓󠅘󠄐󠅣󠅩󠅝󠅒󠅟󠅜󠅏󠅣󠅤󠅢󠅕󠅑󠅝󠄐󠅫︊󠄐󠄐󠄐󠄐󠄐󠄐󠅃󠅩󠅝󠅒󠅟󠅜󠅃󠅤󠅢󠅕󠅑󠅝󠄪󠄪󠄶󠅢󠅟󠅝󠅀󠅑󠅢󠅣󠅕󠅢󠄘󠅠󠅑󠅢󠅣󠅕󠅢󠅏󠅣󠅩󠅝󠅒󠅟󠅜󠅏󠅣󠅤󠅢󠅕󠅑󠅝󠄙󠄐󠄭󠄮󠄐󠅫︊󠄐󠄐󠄐󠄐󠄐󠄐󠄐󠄐󠅖󠅥󠅤󠅥󠅢󠅕󠅣󠄪󠄪󠅠󠅙󠅞󠅏󠅝󠅥󠅤󠄑󠄘󠅠󠅑󠅢󠅣󠅕󠅢󠅏󠅣󠅩󠅝󠅒󠅟󠅜󠅏󠅣󠅤󠅢󠅕󠅑󠅝󠄙󠄫︊󠄐󠄐󠄐󠄐󠄐󠄐󠄐󠄐󠅧󠅘󠅙󠅜󠅕󠄐󠅜󠅕󠅤󠄐󠅃󠅟󠅝󠅕󠄘󠅣󠅩󠅝󠅒󠅟󠅜󠄙󠄐󠄭󠄐󠅠󠅑󠅢󠅣󠅕󠅢󠅏󠅣󠅩󠅝󠅒󠅟󠅜󠅏󠅣󠅤󠅢󠅕󠅑󠅝󠄞󠅞󠅕󠅨󠅤󠄘󠄙󠄞󠅑󠅧󠅑󠅙󠅤󠄐󠅫︊󠄐󠄐󠄐󠄐󠄐󠄐󠄐󠄐󠄐󠄐󠄟󠄟󠄐󠅣󠅕󠅜󠅖󠄞󠅓󠅑󠅓󠅘󠅕󠄞󠅙󠅞󠅣󠅕󠅢󠅤󠅏󠅣󠅩󠅝󠅒󠅟󠅜󠄘󠄖󠅣󠅕󠅜󠅖󠄞󠅖󠅙󠅜󠅕󠅏󠅠󠅑󠅤󠅘󠄜󠄐󠄖󠅣󠅩󠅝󠅒󠅟󠅜󠄙󠄞󠅑󠅧󠅑󠅙󠅤󠄯󠄫︊︊󠄐󠄐󠄐󠄐󠄐󠄐󠄐󠄐󠄐󠄐󠅠󠅢󠅙󠅞󠅤󠅜󠅞󠄑󠄘󠄒󠅫󠅭󠄒󠄜󠄐󠅣󠅩󠅝󠅒󠅟󠅜󠄞󠅓󠅟󠅞󠅤󠅕󠅞󠅤󠄙󠄫︊󠄐󠄐󠄐󠄐󠄐󠄐󠄐󠄐󠅭︊︊󠄐󠄐󠄐󠄐󠄐󠄐󠄐󠄐󠄟󠄟󠄐󠅣󠅕󠅜󠅖󠄞󠅓󠅑󠅓󠅘󠅕󠄞󠅣󠅕󠅤󠅏󠅙󠅣󠅏󠅖󠅥󠅜󠅜󠅩󠅏󠅠󠅑󠅢󠅣󠅕󠅔󠄘󠄖󠅣󠅕󠅜󠅖󠄞󠅖󠅙󠅜󠅕󠅏󠅠󠅑󠅤󠅘󠄙󠄞󠅑󠅧󠅑󠅙󠅤󠄯󠄫︊󠄐󠄐󠄐󠄐󠄐󠄐󠅭︊︊󠄐󠄐󠄐󠄐󠄐󠄐󠅃󠅩󠅝󠅒󠅟󠅜󠅃󠅤󠅢󠅕󠅑󠅝󠄪󠄪󠄶󠅢󠅟󠅝󠄳󠅑󠅓󠅘󠅕󠄘󠅓󠅑󠅓󠅘󠅕󠅏󠅣󠅩󠅝󠅒󠅟󠅜󠅏󠅣󠅤󠅢󠅕󠅑󠅝󠄙󠄐󠄭󠄮󠄐󠅫︊󠄐󠄐󠄐󠄐󠄐󠄐󠄐󠄐󠅖󠅥󠅤󠅥󠅢󠅕󠅣󠄪󠄪󠅠󠅙󠅞󠅏󠅝󠅥󠅤󠄑󠄘󠅓󠅑󠅓󠅘󠅕󠅏󠅣󠅩󠅝󠅒󠅟󠅜󠅏󠅣󠅤󠅢󠅕󠅑󠅝󠄙󠄫︊󠄐󠄐󠄐󠄐󠄐󠄐󠄐󠄐󠅧󠅘󠅙󠅜󠅕󠄐󠅜󠅕󠅤󠄐󠅃󠅟󠅝󠅕󠄘󠅣󠅩󠅝󠅒󠅟󠅜󠄙󠄐󠄭󠄐󠅓󠅑󠅓󠅘󠅕󠅏󠅣󠅩󠅝󠅒󠅟󠅜󠅏󠅣󠅤󠅢󠅕󠅑󠅝󠄞󠅞󠅕󠅨󠅤󠄘󠄙󠄞󠅑󠅧󠅑󠅙󠅤󠄐󠅫︊󠄐󠄐󠄐󠄐󠄐󠄐󠄐󠄐󠄐󠄐󠅠󠅢󠅙󠅞󠅤󠅜󠅞󠄑󠄘󠄒󠅫󠄪󠄯󠅭󠄒󠄜󠄐󠅣󠅩󠅝󠅒󠅟󠅜󠄞󠅝󠅑󠅠󠄘󠅬󠅣󠅩󠅝󠅒󠅟󠅜󠅬󠄐󠅣󠅩󠅝󠅒󠅟󠅜󠄞󠅓󠅟󠅞󠅤󠅕󠅞󠅤󠄞󠅓󠅜󠅟󠅞󠅕󠄘󠄙󠄙󠄙󠄫︊󠄐󠄐󠄐󠄐󠄐󠄐󠄐󠄐󠅭︊󠄐󠄐󠄐󠄐󠄐󠄐󠅭︊󠄐󠄐󠄐󠄐󠅭︊︊󠄐󠄐󠄐󠄐󠄘󠄙󠄞󠅟󠅛󠄘󠄙︊󠄐󠄐󠅭
 }

@@ -6,7 +6,7 @@ use serde::Deserialize;
 use tree_sitter::{Language as TreeSitterLanguage, Query as TreeSitterQuery};
 
 use crate::config::{Config, Language, Query, Template};
-use crate::ext::ResultExt;
+use crate::ext::IntoExt;
 use crate::symbol::Kind;
 use crate::utils::{Lazy, OneOrMany};
 
