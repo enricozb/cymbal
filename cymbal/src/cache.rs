@@ -25,8 +25,12 @@ pub struct Cache {
 impl Cache {
   const CACHE_FILE_NAME: &'static str = "cymbal-cache.sqlite";
 
-  pub async fn from_dirpath(cache_dirpath: &Path) -> Result<Self> {
-    let cache_filepath = cache_dirpath.join(Self::CACHE_FILE_NAME);
+  pub async fn from_dirpath(cache_dir_path: &Path) -> Result<Self> {
+    if !cache_dir_path.exists() {
+      tokio::fs::create_dir_all(cache_dir_path).await?;
+    }
+
+    let cache_filepath = cache_dir_path.join(Self::CACHE_FILE_NAME);
     let options = SqliteConnectOptions::new().filename(cache_filepath).create_if_missing(true);
 
     Self::from_options(options.journal_mode(SqliteJournalMode::Wal)).await
