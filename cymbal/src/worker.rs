@@ -27,30 +27,32 @@ impl Worker {
       file_path,
       file_modified,
       language,
-    } = file_task;
+    } = &file_task;
 
     let Some(cache) = &self.cache else {
-      let symbol_stream = Parser::new(&file_path, language, self.config).symbol_stream().await?;
+      let symbol_stream = Parser::new(file_path, *language, self.config).symbol_stream().await?;
+      self.emit_symbols(file_path, symbol_stream).await;
 
-      return self.emit_symbols(&file_path, symbol_stream).await.ok();
+      return ().ok();
     };
 
-    if cache.is_file_cached(&file_path, &file_modified).await? {
-      let symbol_stream = cache.symbols(&file_path).filter_ok();
+    if cache.is_file_cached(file_path, file_modified).await? {
+      let symbol_stream = cache.symbols(file_path).filter_ok();
+      self.emit_symbols(file_path, symbol_stream).await;
 
-      return self.emit_symbols(&file_path, symbol_stream).await.ok();
+      return ().ok();
     }
 
-    let symbol_stream = Parser::new(&file_path, language, self.config).symbol_stream().await?;
+    let symbol_stream = Parser::new(file_path, *language, self.config).symbol_stream().await?;
 
-    self.cache_and_emit_symbols(cache, &file_path, &file_modified, symbol_stream).await
+    self.cache_and_emit_symbols(cache, file_path, file_modified, symbol_stream).await
   }
 
   async fn emit_symbols(&self, file_path: &Path, symbol_stream: impl Stream<Item = Symbol>) {
     symbol_stream
-      .map(|symbol| println!("{file_path:?} {symbol:?}"))
+      .map(|symbol| println!("{} {symbol:?}", file_path.display()))
       .collect::<()>()
-      .await
+      .await;
   }
 
   async fn cache_and_emit_symbols(
@@ -69,10 +71,8 @@ impl Worker {
       symbols.push(symbol);
     }
 
-    cache.insert_file_info(file_path, file_modified);
-    // TODO(enricozb): write symbol inserter query with query builder.
-    // see: https://github.com/launchbadge/sqlx/issues/294
-    cache.insert_symbols(file_path, symbols).await?;
+    cache.insert_file_info(file_path, file_modified).await?;
+    cache.insert_symbols(file_path, &symbols).await?;
     cache.set_is_fully_parsed(file_path).await?;
 
     ().ok()

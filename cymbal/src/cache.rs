@@ -1,12 +1,12 @@
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use anyhow::{Context, Result};
 use chrono::{DateTime, Utc};
 use futures::{Stream, StreamExt};
-use sqlx::{Either, SqlitePool, sqlite::SqliteConnectOptions};
+use sqlx::{Either, QueryBuilder, SqlitePool, sqlite::SqliteConnectOptions};
 
 use crate::{
-  ext::{Ignore, IntoExt, PathBufExt, PathExt},
+  ext::{Ignore, IntoExt, PathExt},
   symbol::{FileInfo, Symbol},
 };
 
@@ -59,26 +59,38 @@ impl Cache {
     .context("failed to insert file info")
   }
 
-  pub async fn insert_symbol(&self, file_path: &Path, symbol: &Symbol) -> Result<()> {
-    sqlx::query(
-      "
-        INSERT INTO symbol (file_path, kind, language, line, column, content, leading, trailing)
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-        ON CONFLICT DO NOTHING
-      ",
-    )
-    .bind(file_path.as_bytes())
-    .bind(symbol.kind)
-    .bind(symbol.language)
-    .bind(symbol.line)
-    .bind(symbol.column)
-    .bind(&symbol.content)
-    .bind(&symbol.leading)
-    .bind(&symbol.trailing)
-    .execute(&self.pool)
-    .await
-    .map(Ignore::ignore)
-    .context("failed to insert file info")
+  async fn insert_symbols_impl(&self, file_path_bytes: &[u8], symbols: &[Symbol]) -> Result<()> {
+    let mut query = QueryBuilder::new("INSERT INTO symbol (file_path, kind, language, line, column, content, leading, trailing)");
+    query.push_values(symbols, |mut query, symbol| {
+      query.push_bind(file_path_bytes);
+      query.push_bind(symbol.kind);
+      query.push_bind(symbol.language);
+      query.push_bind(symbol.line);
+      query.push_bind(symbol.column);
+      query.push_bind(&symbol.content);
+      query.push_bind(&symbol.leading);
+      query.push_bind(&symbol.trailing);
+    });
+
+    query.build().execute(&self.pool).await.context("failed to insert symbols")?;
+
+    ().ok()
+  }
+
+  pub async fn insert_symbols(&self, file_path: &Path, symbols: &[Symbol]) -> Result<()> {
+    let file_path_bytes = file_path.as_bytes();
+
+    sqlx::query("DELETE FROM symbol WHERE file_path = $1")
+      .bind(file_path_bytes)
+      .execute(&self.pool)
+      .await
+      .context("failed to delete stale symbols")?;
+
+    for symbols_chunk in symbols.chunks(100) {
+      self.insert_symbols_impl(file_path_bytes, symbols_chunk).await?;
+    }
+
+    ().ok()
   }
 
   pub async fn set_is_fully_parsed(&self, file_path: &Path) -> Result<()> {
