@@ -24,9 +24,8 @@ pub struct Args {
   /// If this is a directory, it is recursively searched for files with
   /// supported extensions.
   ///
-  /// If this is a file, it is searched for symbols, and `--language` and
-  /// `--extension` are ignored, and the langauge appropriate for the file
-  /// is used.
+  /// If this is a file, it is searched for symbols, and the `--language` flag
+  /// is ignored, and the language appropriate for the file is used.
   #[arg(default_value = ".")]
   search_path: PathBuf,
 
@@ -46,8 +45,16 @@ pub struct Args {
   separator: char,
 
   /// Only show symbols from files with extensions matching this language.
+  ///
+  /// This flag takes precedence over the `--extension` flag.
   #[arg(long)]
   language: Option<Language>,
+
+  /// Only show symbols from files with the language matching this extension.
+  ///
+  /// The `--language` flag takes precedence over this flag.
+  #[arg(long)]
+  extension: Option<String>,
 
   /// Directory to cache parsed symbols.
   ///
@@ -91,7 +98,7 @@ impl Args {
       Config::default()
     };
 
-    if let Some(language) = self.language {
+    if let Some(language) = self.language() {
       config.for_language(language).ok()
     } else {
       config.ok()
@@ -119,5 +126,9 @@ impl Args {
 
   pub fn separator(&self) -> char {
     self.separator
+  }
+
+  fn language(&self) -> Option<Language> {
+    self.language.or(self.extension.as_ref().and_then(Language::from_extension))
   }
 }
