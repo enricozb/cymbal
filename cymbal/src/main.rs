@@ -6,7 +6,6 @@ mod config;
 mod ext;
 mod parser;
 mod symbol;
-mod symbol_stream;
 mod template;
 mod utils;
 mod walker;

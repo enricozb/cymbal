@@ -27,7 +27,7 @@ impl Walker {
       let metadata = dir_entry.metadata().ok()?;
       if !metadata.is_file() {
         return None;
-      };
+      }
       let file_modified = metadata.modified().ok()?;
       let file_path = dir_entry.into_path();
       let language = Language::from_file_path(&file_path)?;

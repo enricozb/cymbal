@@ -6,7 +6,7 @@ use futures::{Stream, StreamExt};
 
 use crate::cache::Cache;
 use crate::channel::{FileTask, Receiver};
-use crate::config::{Config, Language};
+use crate::config::Config;
 use crate::ext::{IntoExt, TryStreamExt};
 use crate::parser::Parser;
 use crate::symbol::Symbol;
