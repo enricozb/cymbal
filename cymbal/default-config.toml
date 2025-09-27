@@ -147,3 +147,6 @@ type = [
   '(data_type name: (name) @symbol)',
 ]
 function = '(haskell declarations: (declarations (signature name: (variable) @symbol)))'
+
+[json]
+constant = '(pair key: (string) @symbol)'
