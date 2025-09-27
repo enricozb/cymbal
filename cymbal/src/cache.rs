@@ -48,7 +48,7 @@ impl Cache {
       .context("failed to get file info")
   }
 
-  pub async fn insert_file_info(&self, file_path: &Path, file_modified: &DateTime<Utc>) -> Result<()> {
+  pub async fn insert_file(&self, file_path: &Path, file_modified: &DateTime<Utc>) -> Result<()> {
     sqlx::query(
       "
         INSERT INTO file (path, modified)
@@ -100,7 +100,7 @@ impl Cache {
     ().ok()
   }
 
-  pub async fn set_is_fully_parsed(&self, file_path: &Path) -> Result<()> {
+  pub async fn set_file_is_fully_parsed(&self, file_path: &Path) -> Result<()> {
     sqlx::query("UPDATE file SET is_fully_parsed = TRUE WHERE path = $1")
       .bind(file_path.as_bytes())
       .execute(&self.pool)
@@ -119,7 +119,7 @@ impl Cache {
       .filter_map(async |row| row.map(Either::right).transpose())
   }
 
-  pub async fn delete_stale_file_paths(&self, file_paths: HashSet<PathBuf>) -> Result<()> {
+  pub async fn delete_stale_file_paths(&self, file_paths: &HashSet<PathBuf>) -> Result<()> {
     let cached_file_paths = self.get_file_paths();
     futures::pin_mut!(cached_file_paths);
 

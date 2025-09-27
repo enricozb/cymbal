@@ -48,7 +48,7 @@ impl Walker {
     }
 
     if let Some(cache) = &self.cache {
-      cache.delete_stale_file_paths(file_paths).await?;
+      cache.delete_stale_file_paths(&file_paths).await?;
     }
 
     ().ok()

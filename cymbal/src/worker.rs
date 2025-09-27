@@ -15,11 +15,19 @@ pub struct Worker {
   cache: Option<Cache>,
   config: &'static Config,
   receiver: Receiver,
+  delimiter: char,
+  separator: char,
 }
 
 impl Worker {
-  pub fn new(cache: Option<Cache>, config: &'static Config, receiver: Receiver) -> Self {
-    Self { cache, config, receiver }
+  pub fn new(cache: Option<Cache>, config: &'static Config, receiver: Receiver, delimiter: char, separator: char) -> Self {
+    Self {
+      cache,
+      config,
+      receiver,
+      delimiter,
+      separator,
+    }
   }
 
   async fn process_file_task(&self, file_task: FileTask) -> Result<()> {
@@ -50,7 +58,7 @@ impl Worker {
 
   async fn emit_symbols(&self, file_path: &Path, symbol_stream: impl Stream<Item = Symbol>) {
     symbol_stream
-      .map(|symbol| println!("{} {symbol:?}", file_path.display()))
+      .map(|symbol| self.print_symbol(file_path, &symbol))
       .collect::<()>()
       .await;
   }
@@ -66,16 +74,32 @@ impl Worker {
     futures::pin_mut!(symbol_stream);
 
     while let Some(symbol) = symbol_stream.next().await {
-      println!("{symbol:?}");
+      self.print_symbol(file_path, &symbol);
 
       symbols.push(symbol);
     }
 
-    cache.insert_file_info(file_path, file_modified).await?;
+    cache.insert_file(file_path, file_modified).await?;
     cache.insert_symbols(file_path, &symbols).await?;
-    cache.set_is_fully_parsed(file_path).await?;
+    cache.set_file_is_fully_parsed(file_path).await?;
 
     ().ok()
+  }
+
+  fn print_symbol(&self, file_path: &Path, symbol: &Symbol) {
+    print!(
+      "{lang}{dlm}{kind}{dlm}{path}{dlm}{line}{dlm}{col}{dlm}{lead}{dlm}{text}{dlm}{trail}{end}",
+      lang = symbol.language.colored_abbreviation(),
+      kind = symbol.kind.colored_abbreviation(),
+      path = file_path.display(),
+      line = symbol.line,
+      col = symbol.column,
+      lead = symbol.leading_str(),
+      text = symbol.content,
+      trail = symbol.trailing_str(),
+      dlm = self.delimiter,
+      end = self.separator,
+    );
   }
 
   pub async fn run(self) -> Result<()> {

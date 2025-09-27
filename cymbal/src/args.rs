@@ -1,5 +1,5 @@
 use std::num::NonZero;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
 use clap::Parser;
@@ -37,7 +37,7 @@ pub struct Args {
   /// `--extension` are ignored, and the langauge appropriate for the file
   /// is used.
   #[arg(default_value = ".")]
-  pub search_path: PathBuf,
+  search_path: PathBuf,
 
   /// The number of parser tasks, or roughly the amount of parallelism.
   #[arg(long)]
@@ -48,9 +48,28 @@ pub struct Args {
   /// Set to 0 to use an unbounded channel.
   #[arg(long = "buffer", default_value_t = 256)]
   channel_bound: usize,
+
+  /// The characters between properties of a single symbol.
+  ///
+  /// This is the character between the file path, location, kind, text, and
+  /// leading/trailing text written to stdout.
+  ///
+  /// This defaults to U+200B (zero-width space).
+  #[arg(short, long, default_value_t = '\u{200B}')]
+  delimiter: char,
+
+  /// The character between symbols.
+  ///
+  /// This defaults to U+0 (null byte).
+  #[arg(short, long, default_value_t = '\0')]
+  separator: char,
 }
 
 impl Args {
+  pub fn search_path(&self) -> &Path {
+    &self.search_path
+  }
+
   pub async fn cache(&self) -> Result<Option<Cache>> {
     self
       .cache_dirpath
@@ -82,5 +101,13 @@ impl Args {
     } else {
       crate::channel::bounded(self.channel_bound)
     }
+  }
+
+  pub fn delimiter(&self) -> char {
+    self.delimiter
+  }
+
+  pub fn separator(&self) -> char {
+    self.separator
   }
 }
