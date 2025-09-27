@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
 use futures::Stream;
@@ -6,6 +6,16 @@ use serde::de::DeserializeOwned;
 use tree_sitter::Parser as TreeSitterParser;
 
 use crate::config::Language;
+
+pub trait Is<T> {
+  fn is(self) -> T;
+}
+
+impl<T> Is<T> for T {
+  fn is(self) -> T {
+    self
+  }
+}
 
 #[extend::ext(name=IntoExt)]
 pub impl<T> T {
@@ -46,6 +56,15 @@ pub impl<T: IntoIterator> T {
   }
 }
 
+#[extend::ext(name=TryStreamExt)]
+pub impl<T, E, S: Stream<Item = Result<T, E>>> S {
+  fn filter_ok(self) -> impl Stream<Item = T> {
+    use futures::StreamExt;
+
+    self.filter_map(|res| async move { res.ok() })
+  }
+}
+
 #[extend::ext(name=OptionExt)]
 pub impl<T> Option<T> {
   async fn into_future<U>(self) -> Option<U>
@@ -82,13 +101,26 @@ pub impl<T> T {
   fn ignore(self) {}
 }
 
+#[extend::ext(name=PathBufExt)]
+pub impl PathBuf {
+  fn into_bytes(self) -> Vec<u8> {
+    self.into_os_string().into_encoded_bytes()
+  }
+}
+
 #[extend::ext(name=PathExt)]
-pub impl<T: AsRef<Path>> T {
-  fn into_owned_string_lossy(&self) -> String {
-    self.as_ref().to_string_lossy().into_owned()
+pub impl<T> T {
+  fn as_bytes<'a>(self) -> &'a [u8]
+  where
+    Self: Is<&'a Path>,
+  {
+    self.is().as_os_str().as_encoded_bytes()
   }
 
-  async fn read_bytes(&self) -> Result<Vec<u8>> {
+  async fn read_bytes(&self) -> Result<Vec<u8>>
+  where
+    Self: AsRef<Path>,
+  {
     tokio::fs::read(self).await.context("failed to read")
   }
 }

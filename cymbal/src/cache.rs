@@ -1,11 +1,12 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
+use chrono::{DateTime, Utc};
 use futures::{Stream, StreamExt};
 use sqlx::{Either, SqlitePool, sqlite::SqliteConnectOptions};
 
 use crate::{
-  ext::{Ignore, IntoExt, PathExt},
+  ext::{Ignore, IntoExt, PathBufExt, PathExt},
   symbol::{FileInfo, Symbol},
 };
 
@@ -24,27 +25,34 @@ impl Cache {
     Self::from_options(options).await
   }
 
-  pub async fn get_file_info(&self, file_path: &Path) -> Result<Option<FileInfo>> {
-    sqlx::query_as("SELECT * FROM file WHERE file.path = $1")
-      .bind(file_path.to_string_lossy().into_owned())
+  pub async fn is_file_cached(&self, file_path: &Path, file_modified: &DateTime<Utc>) -> Result<bool> {
+    // TODO(enricozb): try writing an EXISTS query to check performance
+    let Some(cache_file_info) = self.get_file_info(file_path).await? else { return false.ok() };
+    let is_cached = &cache_file_info.modified == file_modified && cache_file_info.is_fully_parsed;
+
+    is_cached.ok()
+  }
+
+  async fn get_file_info(&self, file_path: &Path) -> Result<Option<FileInfo>> {
+    sqlx::query_as("SELECT modified, is_fully_parsed FROM file WHERE file.path = $1")
+      .bind(file_path.as_bytes())
       .fetch_optional(&self.pool)
       .await
       .context("failed to get file info")
   }
 
-  pub async fn insert_file_info(&self, file_info: &FileInfo) -> Result<()> {
+  pub async fn insert_file_info(&self, file_path: &Path, file_modified: &DateTime<Utc>) -> Result<()> {
     sqlx::query(
       "
-        INSERT INTO file (path, modified, is_fully_parsed)
-          VALUES ($1, $2, $3)
+        INSERT INTO file (path, modified)
+          VALUES ($1, $2)
         ON CONFLICT DO UPDATE SET
           modified = excluded.modified,
-          is_fully_parsed = excluded.is_fully_parsed
+          is_fully_parsed = FALSE
       ",
     )
-    .bind(&file_info.path)
-    .bind(file_info.modified)
-    .bind(file_info.is_fully_parsed)
+    .bind(file_path.as_bytes())
+    .bind(file_modified)
     .execute(&self.pool)
     .await
     .map(Ignore::ignore)
@@ -59,7 +67,7 @@ impl Cache {
         ON CONFLICT DO NOTHING
       ",
     )
-    .bind(file_path.to_string_lossy())
+    .bind(file_path.as_bytes())
     .bind(symbol.kind)
     .bind(symbol.language)
     .bind(symbol.line)
@@ -75,16 +83,19 @@ impl Cache {
 
   pub async fn set_is_fully_parsed(&self, file_path: &Path) -> Result<()> {
     sqlx::query("UPDATE file SET is_fully_parsed = TRUE WHERE path = $1")
-      .bind(file_path.into_owned_string_lossy())
+      .bind(file_path.as_bytes())
       .execute(&self.pool)
       .await
       .map(Ignore::ignore)
       .context("failed to set is_fully_parsed for file info")
   }
 
-  pub fn symbols(&self, file_path: &Path) -> impl Stream<Item = Result<Symbol, sqlx::Error>> {
+  pub fn symbols<'a, 'path>(&'a self, file_path: &'path Path) -> impl Stream<Item = Result<Symbol, sqlx::Error>> + 'path
+  where
+    'a: 'path,
+  {
     sqlx::query_as("SELECT * FROM symbol WHERE symbol.file_path = $1")
-      .bind(file_path.into_owned_string_lossy())
+      .bind(file_path.as_bytes())
       .fetch_many(&self.pool)
       .filter_map(async |row| row.map(Either::right).transpose())
   }

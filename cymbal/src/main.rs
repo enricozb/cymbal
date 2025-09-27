@@ -24,23 +24,21 @@ use crate::worker::Worker;
 #[tokio::main]
 async fn main() -> Result<()> {
   let args = Args::parse();
+  let available_concurrency = args.concurrency()?.convert::<usize>();
   let cache = args.cache().await?;
   let config = args.config().await?.leak();
   let (sender, receiver) = args.channel();
-  let available_concurrency = args.concurrency()?.convert::<usize>();
+  let walker = Walker::new(args.search_path, sender).spawn();
 
   // TODO:
   // - synchronous walker spawning async worker tasks, joining at the end.
   // - cache must be shared
   // - tree sitter languages and queries must be shared
 
-  let walker = Walker::new(args.search_path, sender).spawn();
-
   let mut workers = JoinSet::new();
   for _ in 0..available_concurrency {
     workers.spawn(Worker::new(cache.clone(), config, receiver.clone()).run());
   }
-
   workers.join_all().await.ok_all()?;
 
   walker.await?

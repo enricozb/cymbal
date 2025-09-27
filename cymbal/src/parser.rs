@@ -12,22 +12,26 @@ use crate::{
 };
 
 pub struct Parser<'a> {
-  path: &'a Path,
+  file_path: &'a Path,
   language: Language,
   queries: Option<&'static Lazy<Queries>>,
 }
 
 impl<'a> Parser<'a> {
-  pub fn new(path: &'a Path, language: Language, config: &'static Config) -> Self {
+  pub fn new(file_path: &'a Path, language: Language, config: &'static Config) -> Self {
     let queries = config.queries_for_language(language);
 
-    Self { path, language, queries }
+    Self {
+      file_path,
+      language,
+      queries,
+    }
   }
 
   pub async fn symbol_stream(self) -> Result<impl Stream<Item = Symbol>> {
     let language = self.language;
     let mut parser = TreeSitterParser::with_language(self.language)?;
-    let content_bytes = self.path.read_bytes().await?;
+    let content_bytes = self.file_path.read_bytes().await?;
     let tree = parser.parse(&content_bytes, None).context("failed to create parser")?;
 
     self

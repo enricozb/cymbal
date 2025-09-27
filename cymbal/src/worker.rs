@@ -2,14 +2,14 @@ use std::path::Path;
 
 use anyhow::Result;
 use chrono::{DateTime, Utc};
-use futures::StreamExt;
+use futures::{Stream, StreamExt};
 
 use crate::cache::Cache;
-use crate::channel::Receiver;
+use crate::channel::{FileTask, Receiver};
 use crate::config::{Config, Language};
-use crate::ext::IntoExt;
+use crate::ext::{IntoExt, TryStreamExt};
 use crate::parser::Parser;
-use crate::symbol_stream::{CacheSymbolStream, ParserSymbolStream, SymbolStream};
+use crate::symbol::Symbol;
 
 pub struct Worker {
   cache: Option<Cache>,
@@ -22,41 +22,66 @@ impl Worker {
     Self { cache, config, receiver }
   }
 
-  async fn is_cached<'a>(&'a self, file_path: &Path) -> Result<Option<&'a Cache>> {
-    let Some(cache) = &self.cache else { return None.ok() };
-    let file_modified = file_path.metadata()?.modified()?.convert::<DateTime<Utc>>();
-    let cache_file_info = cache.get_file_info(file_path).await?;
-    let cache_file_modified = cache_file_info.map(|file_info| file_info.modified);
-    let is_cached = cache_file_modified.is_none_or(|cache_file_modified| cache_file_modified != file_modified);
+  async fn process_file_task(&self, file_task: FileTask) -> Result<()> {
+    let FileTask {
+      file_path,
+      file_modified,
+      language,
+    } = file_task;
 
-    if is_cached { cache.some().ok() } else { None.ok() }
+    let Some(cache) = &self.cache else {
+      let symbol_stream = Parser::new(&file_path, language, self.config).symbol_stream().await?;
+
+      return self.emit_symbols(&file_path, symbol_stream).await.ok();
+    };
+
+    if cache.is_file_cached(&file_path, &file_modified).await? {
+      let symbol_stream = cache.symbols(&file_path).filter_ok();
+
+      return self.emit_symbols(&file_path, symbol_stream).await.ok();
+    }
+
+    let symbol_stream = Parser::new(&file_path, language, self.config).symbol_stream().await?;
+
+    self.cache_and_emit_symbols(cache, &file_path, &file_modified, symbol_stream).await
   }
 
-  async fn symbol_stream(
-    &self,
-    file_path: &Path,
-    language: Language,
-  ) -> Result<SymbolStream<impl ParserSymbolStream, impl CacheSymbolStream>> {
-    if let Some(cache) = self.is_cached(file_path).await? {
-      SymbolStream::FromCache(cache.symbols(file_path))
-    } else {
-      let parser = Parser::new(file_path, language, self.config);
+  async fn emit_symbols(&self, file_path: &Path, symbol_stream: impl Stream<Item = Symbol>) {
+    symbol_stream
+      .map(|symbol| println!("{file_path:?} {symbol:?}"))
+      .collect::<()>()
+      .await
+  }
 
-      SymbolStream::FromParser(parser.symbol_stream().await?)
+  async fn cache_and_emit_symbols(
+    &self,
+    cache: &Cache,
+    file_path: &Path,
+    file_modified: &DateTime<Utc>,
+    symbol_stream: impl Stream<Item = Symbol>,
+  ) -> Result<()> {
+    let mut symbols = Vec::new();
+    futures::pin_mut!(symbol_stream);
+
+    while let Some(symbol) = symbol_stream.next().await {
+      println!("{symbol:?}");
+
+      symbols.push(symbol);
     }
-    .ok()
+
+    cache.insert_file_info(file_path, file_modified);
+    // TODO(enricozb): write symbol inserter query with query builder.
+    // see: https://github.com/launchbadge/sqlx/issues/294
+    cache.insert_symbols(file_path, symbols).await?;
+    cache.set_is_fully_parsed(file_path).await?;
+
+    ().ok()
   }
 
   pub async fn run(self) -> Result<()> {
     // TODO(enricozb): try using `self.receiver` as a `Stream`.
-    while let Ok((file_path, language)) = self.receiver.recv().await {
-      let symbol_stream = self.symbol_stream(&file_path, language).await?.into_stream();
-
-      futures::pin_mut!(symbol_stream);
-
-      while let Some(symbol) = symbol_stream.next().await {
-        println!("{symbol:?}");
-      }
+    while let Ok(file_task) = self.receiver.recv().await {
+      self.process_file_task(file_task).await?;
     }
 
     ().ok()

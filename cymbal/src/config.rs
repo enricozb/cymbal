@@ -20,7 +20,7 @@ pub struct Config {
 
 impl Config {
   pub async fn from_path<P: AsRef<Path>>(path: P) -> Result<Self> {
-    let content = path.read_bytes().await?;
+    let content = path.as_ref().read_bytes().await?;
 
     RawConfig::from_bytes(&content).map(Config::from)
   }

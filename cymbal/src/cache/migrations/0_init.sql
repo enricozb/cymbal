@@ -1,5 +1,5 @@
 CREATE TABLE file (
-  path TEXT NOT NULL PRIMARY KEY,
+  path BLOB NOT NULL PRIMARY KEY,
   modified INTEGER NOT NULL,
 
   -- this is set to TRUE once a file is fully parsed. if this is false, this

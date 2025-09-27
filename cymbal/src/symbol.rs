@@ -1,27 +1,13 @@
-use std::path::Path;
-
 use chrono::{DateTime, Utc};
 use serde::Deserialize;
 use sqlx::Type as SqlxType;
 
 use crate::config::Language;
-use crate::ext::PathExt;
 
 #[derive(sqlx::FromRow)]
 pub struct FileInfo {
-  pub path: String,
   pub modified: DateTime<Utc>,
   pub is_fully_parsed: bool,
-}
-
-impl FileInfo {
-  pub fn new<P: AsRef<Path>>(path: P, modified: DateTime<Utc>) -> Self {
-    Self {
-      path: path.into_owned_string_lossy(),
-      modified,
-      is_fully_parsed: false,
-    }
-  }
 }
 
 #[derive(sqlx::FromRow, Debug)]

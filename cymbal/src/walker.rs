@@ -1,10 +1,10 @@
 use std::path::PathBuf;
 
 use anyhow::Result;
-use ignore::{DirEntry, Walk};
+use ignore::Walk;
 use tokio::task::JoinHandle;
 
-use crate::channel::Sender;
+use crate::channel::{FileTask, Sender};
 use crate::config::Language;
 use crate::ext::IntoExt;
 
@@ -23,14 +23,22 @@ impl Walker {
   }
 
   async fn run(self) -> Result<()> {
-    let walker = Walk::new(self.path)
-      .filter_map(Result::ok)
-      .map(DirEntry::into_path)
-      .filter(|path| path.is_file())
-      .filter_map(|file_path| Language::from_file_path(&file_path).map(|language| (file_path, language)));
+    let walker = Walk::new(self.path).filter_map(Result::ok).filter_map(|dir_entry| {
+      let metadata = dir_entry.metadata().ok()?;
+      if !metadata.is_file() {
+        return None;
+      };
+      let file_modified = metadata.modified().ok()?;
+      let file_path = dir_entry.into_path();
+      let language = Language::from_file_path(&file_path)?;
 
-    for (file_path, language) in walker {
-      self.sender.send((file_path, language)).await?;
+      (file_path, file_modified, language).some()
+    });
+
+    for (file_path, file_modified, language) in walker {
+      let file_task = FileTask::new(file_path, file_modified.into(), language);
+
+      self.sender.send(file_task).await?;
     }
 
     ().ok()
