@@ -70,12 +70,6 @@ macro_rules! Language {
     }
 
     impl Language {
-      pub fn extensions(self) -> &'static [&'static str] {
-        match self {
-          $( Self::$name => &[$($ext),*], )*
-        }
-      }
-
       pub fn as_tree_sitter(self) -> TreeSitterLanguage {
         match self {
           $( Self::$name => $ts, )*
