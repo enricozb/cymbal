@@ -25,6 +25,20 @@ impl Config {
     RawConfig::from_bytes(&content).map(Config::from)
   }
 
+  pub fn contains_language(&self, language: Language) -> bool {
+    self.languages.contains_key(&language)
+  }
+
+  pub fn for_language(self, language: Language) -> Self {
+    Self {
+      languages: self
+        .languages
+        .into_iter()
+        .filter(|(config_lang, _)| config_lang == &language)
+        .collect(),
+    }
+  }
+
   pub fn queries_for_language(&self, language: Language) -> Option<&Lazy<Queries>> {
     self.languages.get(&language)
   }

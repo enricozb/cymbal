@@ -32,13 +32,17 @@ impl Worker {
 
   async fn process_file_task(&self, file_task: FileTask) -> Result<()> {
     let FileTask {
-      file_path,
-      file_modified,
+      ref file_path,
+      ref file_modified,
       language,
-    } = &file_task;
+    } = file_task;
+
+    if !self.config.contains_language(language) {
+      return ().ok();
+    }
 
     let Some(cache) = &self.cache else {
-      let symbol_stream = Parser::new(file_path, *language, self.config).symbol_stream().await?;
+      let symbol_stream = Parser::new(file_path, language, self.config).symbol_stream().await?;
       self.emit_symbols(file_path, symbol_stream).await;
 
       return ().ok();
@@ -51,7 +55,7 @@ impl Worker {
       return ().ok();
     }
 
-    let symbol_stream = Parser::new(file_path, *language, self.config).symbol_stream().await?;
+    let symbol_stream = Parser::new(file_path, language, self.config).symbol_stream().await?;
 
     self.cache_and_emit_symbols(cache, file_path, file_modified, symbol_stream).await
   }

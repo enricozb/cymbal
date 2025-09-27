@@ -6,7 +6,7 @@ use clap::Parser;
 
 use crate::cache::Cache;
 use crate::channel::{Receiver, Sender};
-use crate::config::Config;
+use crate::config::{Config, Language};
 use crate::ext::{IntoExt, OptionExt};
 
 #[derive(Parser)]
@@ -19,15 +19,6 @@ pub struct Args {
   #[arg(short, long = "config")]
   config_path: Option<PathBuf>,
 
-  /// Directory to cache parsed symbols.
-  ///
-  /// Files are reparsed if their cached mtime differs from than their current
-  /// mtime, or the path of the file doesn't exist in the cache. This option
-  /// is typically used when `symbols` is called from the same directory
-  /// multiple times, such as searching over a code base in an editor.
-  #[arg(long = "cache")]
-  cache_dirpath: Option<PathBuf>,
-
   /// The file or directory to search for symbols in.
   ///
   /// If this is a directory, it is recursively searched for files with
@@ -38,16 +29,6 @@ pub struct Args {
   /// is used.
   #[arg(default_value = ".")]
   search_path: PathBuf,
-
-  /// The number of parser tasks, or roughly the amount of parallelism.
-  #[arg(long)]
-  concurrency: Option<NonZero<usize>>,
-
-  /// The maximum number of files to enqueue at any given time.
-  ///
-  /// Set to 0 to use an unbounded channel.
-  #[arg(long = "buffer", default_value_t = 256)]
-  channel_bound: usize,
 
   /// The characters between properties of a single symbol.
   ///
@@ -63,6 +44,29 @@ pub struct Args {
   /// This defaults to U+0 (null byte).
   #[arg(short, long, default_value_t = '\0')]
   separator: char,
+
+  /// Only show symbols from files with extensions matching this language.
+  #[arg(long)]
+  language: Option<Language>,
+
+  /// Directory to cache parsed symbols.
+  ///
+  /// Files are reparsed if their cached mtime differs from than their current
+  /// mtime, or the path of the file doesn't exist in the cache. This option
+  /// is typically used when `symbols` is called from the same directory
+  /// multiple times, such as searching over a code base in an editor.
+  #[arg(long = "cache")]
+  cache_dirpath: Option<PathBuf>,
+
+  /// The number of parser tasks, or roughly the amount of parallelism.
+  #[arg(long)]
+  concurrency: Option<NonZero<usize>>,
+
+  /// The maximum number of files to enqueue at any given time.
+  ///
+  /// Set to 0 to use an unbounded channel.
+  #[arg(long = "buffer", default_value_t = 256)]
+  channel_bound: usize,
 }
 
 impl Args {
@@ -81,10 +85,16 @@ impl Args {
   }
 
   pub async fn config(&self) -> Result<Config> {
-    if let Some(config_path) = &self.config_path {
-      Config::from_path(config_path).await
+    let config = if let Some(config_path) = &self.config_path {
+      Config::from_path(config_path).await?
     } else {
-      Config::default().ok()
+      Config::default()
+    };
+
+    if let Some(language) = self.language {
+      config.for_language(language).ok()
+    } else {
+      config.ok()
     }
   }
 
