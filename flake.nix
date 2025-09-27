@@ -12,5 +12,7 @@
           file = ./rust-toolchain.toml;
           sha256 = "sha256-+9FmLhAOezBZCOziO0Qct1NOrfpjNsXxc/8I0c7BdKE=";
         };
-      in { devShells.default = pkgs.mkShell { packages = [ rust-toolchain ]; }; });
+      in {
+        devShells.default = pkgs.mkShell { packages = [ rust-toolchain pkgs.cargo-flamegraph ]; };
+      });
 }

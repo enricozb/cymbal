@@ -3,7 +3,10 @@ use std::path::Path;
 use anyhow::{Context, Result};
 use chrono::{DateTime, Utc};
 use futures::{Stream, StreamExt};
-use sqlx::{Either, QueryBuilder, SqlitePool, sqlite::SqliteConnectOptions};
+use sqlx::{
+  Either, QueryBuilder, SqlitePool,
+  sqlite::{SqliteConnectOptions, SqliteJournalMode},
+};
 
 use crate::{
   ext::{Ignore, IntoExt, PathExt},
@@ -22,7 +25,7 @@ impl Cache {
     let cache_filepath = cache_dirpath.join(Self::CACHE_FILE_NAME);
     let options = SqliteConnectOptions::new().filename(cache_filepath).create_if_missing(true);
 
-    Self::from_options(options).await
+    Self::from_options(options.journal_mode(SqliteJournalMode::Wal)).await
   }
 
   pub async fn is_file_cached(&self, file_path: &Path, file_modified: &DateTime<Utc>) -> Result<bool> {
