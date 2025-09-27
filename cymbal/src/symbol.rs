@@ -1,35 +1,40 @@
-use serde::{Deserialize, Serialize};
+use chrono::{DateTime, Utc};
+use serde::Deserialize;
+use sqlx::Type as SqlxType;
 
-use crate::{color, text::Span};
+use crate::color;
+use crate::config::Language;
 
-#[derive(Default, Serialize, Deserialize)]
-pub struct Symbol<P = (), T = String> {
-  pub path: P,
-  pub span: Span,
-  pub lead: T,
-  pub text: T,
-  pub tail: T,
-  pub kind: Kind,
+#[derive(sqlx::FromRow)]
+pub struct FileInfo {
+  pub modified: DateTime<Utc>,
+  pub is_fully_parsed: bool,
 }
 
-impl<P, T> Symbol<P, T> {
-  pub fn forget_path<T2>(self) -> Symbol<(), T2>
-  where
-    T: Into<T2>,
-  {
-    Symbol {
-      path: (),
-      span: self.span,
-      lead: self.lead.into(),
-      text: self.text.into(),
-      tail: self.tail.into(),
-      kind: self.kind,
-    }
+#[derive(sqlx::FromRow, Debug)]
+pub struct Symbol {
+  pub kind: Kind,
+  pub language: Language,
+  pub line: i64,
+  pub column: i64,
+  pub content: String,
+  pub leading: Option<String>,
+  pub trailing: Option<String>,
+}
+
+impl Symbol {
+  pub fn leading_str(&self) -> &str {
+    self.leading.as_deref().unwrap_or("")
+  }
+
+  pub fn trailing_str(&self) -> &str {
+    self.trailing.as_deref().unwrap_or("")
   }
 }
 
-#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq, Hash, SqlxType)]
 #[serde(rename_all = "lowercase")]
+#[repr(u8)]
 pub enum Kind {
   Module,
   Macro,
@@ -50,14 +55,6 @@ pub enum Kind {
   Function,
   Method,
   Impl,
-
-  Unknown,
-}
-
-impl Default for Kind {
-  fn default() -> Self {
-    Self::Unknown
-  }
 }
 
 impl Kind {
@@ -86,8 +83,6 @@ impl Kind {
       Self::Function  => color!("(func)  ", magenta),
       Self::Method    => color!("(method)", magenta),
       Self::Impl      => color!("(impl)  ", magenta),
-
-      Self::Unknown   => color!("(??????)", red),
     }
   }
 }

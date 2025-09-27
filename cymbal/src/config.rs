@@ -1,37 +1,60 @@
-pub mod raw;
+mod raw;
 
-use std::{collections::HashMap, sync::LazyLock};
+use std::{collections::HashMap, path::Path};
 
+use anyhow::Result;
 use clap::ValueEnum;
 use indexmap::IndexMap;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use sqlx::Type as SqlxType;
 use tree_sitter::{Language as TreeSitterLanguage, Query as TreeSitterQuery};
 
-use crate::{color, symbol::Kind as SymbolKind, template::Template};
+use crate::ext::PathExt;
+use crate::{color, config::raw::RawConfig, ext::TomlExt, symbol::Kind, template::Template, utils::Lazy};
 
 static DEFAULT_CONFIG: &str = include_str!("../default-config.toml");
 
-type Lazy<T> = LazyLock<T, Box<dyn FnOnce() -> T + Send>>;
-
 pub struct Config {
-  pub languages: HashMap<Language, Lazy<LanguageQueries>>,
-}
-
-pub struct LanguageQueries {
-  /// Queries for symbols that should be searched for.
-  pub queries: IndexMap<SymbolKind, Vec<Query>>,
-}
-
-pub struct Query {
-  pub ts: TreeSitterQuery,
-  pub leading: Option<Template>,
-  pub trailing: Option<Template>,
+  languages: HashMap<Language, Lazy<Queries>>,
 }
 
 impl Config {
-  /// Returns all extensions the config references.
-  pub fn extensions(&self) -> impl Iterator<Item = &'static str> + '_ {
-    self.languages.keys().flat_map(|l| l.extensions()).copied()
+  pub async fn from_path<P: AsRef<Path>>(path: P) -> Result<Self> {
+    let content = path.as_ref().read_bytes().await?;
+
+    RawConfig::from_bytes(&content).map(Config::from)
+  }
+
+  pub fn queries_for_language(&self, language: Language) -> Option<&Lazy<Queries>> {
+    self.languages.get(&language)
+  }
+}
+
+impl Default for Config {
+  fn default() -> Self {
+    RawConfig::from_toml_str(DEFAULT_CONFIG).unwrap().into()
+  }
+}
+
+pub type Queries = IndexMap<Kind, Vec<Query>>;
+
+pub struct Query {
+  ts: TreeSitterQuery,
+  leading: Option<Template>,
+  trailing: Option<Template>,
+}
+
+impl Query {
+  pub fn tree_sitter_query(&self) -> &TreeSitterQuery {
+    &self.ts
+  }
+
+  pub fn leading(&self) -> Option<&Template> {
+    self.leading.as_ref()
+  }
+
+  pub fn trailing(&self) -> Option<&Template> {
+    self.trailing.as_ref()
   }
 }
 
@@ -39,19 +62,14 @@ macro_rules! Language {
   (
     $( { $display_name:literal, $name:ident, $color:ident, [$($ext:literal),*], $ts:expr } ),* $(,)?
   ) => {
-    #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq, Hash, ValueEnum)]
+    #[repr(u8)]
+    #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq, Hash, SqlxType, ValueEnum)]
     #[serde(rename_all = "lowercase")]
     pub enum Language {
       $( $name, )*
     }
 
     impl Language {
-      pub fn extensions(self) -> &'static [&'static str] {
-        match self {
-          $( Self::$name => &[$($ext),*], )*
-        }
-      }
-
       pub fn as_tree_sitter(self) -> TreeSitterLanguage {
         match self {
           $( Self::$name => $ts, )*
@@ -72,6 +90,10 @@ macro_rules! Language {
           _ => None,
         }
       }
+
+      pub fn from_file_path<P: AsRef<Path>>(file_path: P) -> Option<Self> {
+        Self::from_extension(file_path.as_ref().extension()?.to_str()?)
+      }
     }
   };
 }
@@ -88,4 +110,14 @@ Language! {
   { "(py)", Python, bright_yellow, ["py"], tree_sitter_python::LANGUAGE.into() },
   { "(rs)", Rust, yellow, ["rs"], tree_sitter_rust::LANGUAGE.into() },
   { "(ts)", TypeScript, blue, ["js", "jsx", "ts", "tsx"], tree_sitter_typescript::LANGUAGE_TSX.into() },
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn config_default_no_panic() {
+    Config::default();
+  }
 }

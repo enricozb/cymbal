@@ -1,122 +1,90 @@
-use std::{
-  collections::HashSet,
-  path::{Path, PathBuf},
-};
+use std::{collections::HashSet, path::Path};
 
-use anyhow::Context;
-use indexmap::IndexMap;
-use streaming_iterator::StreamingIterator;
-use tree_sitter::{Parser as TreeSitterParser, QueryCursor, QueryMatch};
+use anyhow::{Context, Result};
+use futures::{Stream, StreamExt};
+use tree_sitter::{Parser as TreeSitterParser, Point, QueryCursor};
 
 use crate::{
-  config::{Config, Language, Query},
-  symbol::{Kind as SymbolKind, Symbol},
-  text::{Loc, Span},
+  config::{Config, Language, Queries},
+  ext::{IntoExt, IteratorExt, PathExt, StrExt, TreeSitterParserExt},
+  symbol::Symbol,
+  utils::Lazy,
 };
 
 pub struct Parser<'a> {
-  path: PathBuf,
-  queries: &'a IndexMap<SymbolKind, Vec<Query>>,
-  pub language: Language,
+  file_path: &'a Path,
+  language: Language,
+  queries: Option<&'static Lazy<Queries>>,
 }
 
 impl<'a> Parser<'a> {
-  pub fn from_path<P: AsRef<Path>>(config: &'a Config, path: P) -> Option<Self> {
-    let path = path.as_ref();
-    let extension = path.extension()?.to_str()?;
-    let language = Language::from_extension(extension)?;
-    let queries = &config.languages.get(&language)?.queries;
+  pub fn new(file_path: &'a Path, language: Language, config: &'static Config) -> Self {
+    let queries = config.queries_for_language(language);
 
-    Some(Self {
-      path: path.to_path_buf(),
+    Self {
+      file_path,
       language,
       queries,
-    })
+    }
   }
 
-  pub fn on_symbol(
-    &self,
-    callback: impl Fn(Symbol<(), &str>) -> Result<(), anyhow::Error>,
-  ) -> Result<(), anyhow::Error> {
-    let mut parser = TreeSitterParser::new();
-    parser
-      .set_language(&self.language.as_tree_sitter())
-      .context("set_language")?;
+  pub async fn symbol_stream(self) -> Result<impl Stream<Item = Symbol>> {
+    let language = self.language;
+    let mut parser = TreeSitterParser::with_language(self.language)?;
+    let content_bytes = self.file_path.read_bytes().await?;
+    let tree = parser.parse(&content_bytes, None).context("failed to create parser")?;
 
-    let content = std::fs::read_to_string(&self.path).context("read")?;
-
-    let tree = parser.parse(content.as_bytes(), None).context("parse")?;
-    let mut positions = HashSet::new();
-
-    for (kind, queries) in self.queries {
-      for query in queries {
-        let Some(symbol_index) = query.ts.capture_index_for_name("symbol") else {
-          continue;
-        };
-
+    self
+      .queries
+      .into_iter()
+      .flat_map(|queries| queries.iter())
+      .stream()
+      .flat_map(|(kind, queries)| queries.stream().map(move |query| (kind, query)))
+      .filter_map(|(kind, query)| async move {
+        query
+          .tree_sitter_query()
+          .capture_index_for_name("symbol")
+          .map(|symbol_index| (kind, query, symbol_index))
+      })
+      .flat_map(move |(kind, query, symbol_index)| {
         let mut cursor = QueryCursor::new();
-        let mut matches = cursor.matches(&query.ts, tree.root_node(), content.as_bytes());
+        let mut start_points = HashSet::new();
+        let mut matches = cursor.matches(query.tree_sitter_query(), tree.root_node(), content_bytes.as_slice());
+        let mut symbols = Vec::new();
 
-        while let Some(m) = matches.next() {
-          let Some(capture) = m.captures.iter().find(|q| q.index == symbol_index) else {
-            continue;
-          };
+        while let Some(m) = tree_sitter::StreamingIterator::next(&mut matches) {
+          let Some(capture) = m.captures.iter().find(|q| q.index == symbol_index) else { continue };
 
           let node = capture.node;
-          let start_pos = node.start_position();
+          let start_point @ Point { row, column } = node.start_position();
 
-          if positions.contains(&start_pos) {
+          if start_points.contains(&start_point) {
             continue;
           }
-          positions.insert(start_pos);
-
-          let end_pos = node.start_position();
+          start_points.insert(start_point);
 
           let start_byte = node.start_byte();
           let end_byte = node.end_byte();
-          let text = &content[start_byte..end_byte];
+          let symbol_content_bytes = &content_bytes[start_byte..end_byte];
+          let Some(symbol_content_str) = symbol_content_bytes.to_str() else { continue };
 
-          let span = Span::new(
-            Loc::new(start_pos.row + 1, start_pos.column + 1),
-            Loc::new(end_pos.row + 1, end_pos.column + 1),
-          );
+          let leading = query.leading().map(|t| t.render(m, content_bytes.as_slice())).and_then(Result::ok);
+          let trailing = query.trailing().map(|t| t.render(m, content_bytes.as_slice())).and_then(Result::ok);
 
-          let lead = &query.render_leading(m, &content).context("failed to render leading")?;
-          let tail = &query
-            .render_trailing(m, &content)
-            .context("failed to render trailing")?;
-
-          callback(Symbol {
-            path: (),
-            span,
-            lead,
-            text,
-            tail,
+          #[allow(clippy::cast_possible_wrap)]
+          symbols.push(Symbol {
             kind: *kind,
-          })
-          .context("callback")?;
+            language,
+            line: row as i64 + 1,
+            column: column as i64,
+            content: symbol_content_str.to_string(),
+            leading,
+            trailing,
+          });
         }
-      }
-    }
 
-    Ok(())
-  }
-}
-
-impl Query {
-  pub fn render_leading(&self, m: &QueryMatch, content: &str) -> Result<String, anyhow::Error> {
-    let Some(leading) = &self.leading else {
-      return Ok(String::new());
-    };
-
-    leading.render(m, content).context("failed to render")
-  }
-
-  pub fn render_trailing(&self, m: &QueryMatch, content: &str) -> Result<String, anyhow::Error> {
-    let Some(trailing) = &self.trailing else {
-      return Ok(String::new());
-    };
-
-    trailing.render(m, content).context("failed to render")
+        symbols.stream()
+      })
+      .ok()
   }
 }

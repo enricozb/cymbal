@@ -1,100 +1,172 @@
 use std::{
-  collections::HashMap,
-  fs::File,
+  collections::HashSet,
   path::{Path, PathBuf},
-  time::SystemTime,
 };
 
-use anyhow::Context;
-use serde::{Deserialize, Serialize};
+use anyhow::{Context, Result};
+use chrono::{DateTime, Utc};
+use futures::{Stream, StreamExt};
+use sqlx::{
+  Either, QueryBuilder, Sqlite, SqlitePool,
+  sqlite::{SqliteConnectOptions, SqliteJournalMode},
+};
 
-use crate::{config::Language, ext::ResultExt, symbol::Symbol};
+use crate::{
+  ext::{Ignore, IntoExt, PathExt},
+  symbol::{FileInfo, Symbol},
+  utils::RawPath,
+};
 
-const CACHE_FILE_NAME: &str = "cache.json";
-
-#[derive(Default)]
+#[derive(Clone)]
 pub struct Cache {
-  path: Option<PathBuf>,
-  files: HashMap<PathBuf, FileInfo>,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct FileInfo {
-  pub modified: SystemTime,
-  /// Cached symbols don't contain their own paths  as they are stored in the
-  /// [`Cache::files`] field.
-  pub symbols: Vec<Symbol<(), String>>,
-  /// The inferred language of this file.
-  pub language: Language,
+  pool: SqlitePool,
 }
 
 impl Cache {
-  /// Read a cache from a directory containing the cache.
-  ///
-  /// If the directory does not exist or does not contain the cache file,
-  /// the directory and file are created, and a default cache is returned.
-  pub fn from_dir<P: AsRef<Path>>(path: P) -> Result<Self, anyhow::Error> {
-    let path = path.as_ref().join(CACHE_FILE_NAME);
+  const CACHE_FILE_NAME: &'static str = "cymbal-cache.sqlite";
 
-    if !path.exists() {
-      std::fs::create_dir_all(path.parent().context("parent")?).context("create dir")?;
+  pub async fn from_dirpath(cache_dirpath: &Path) -> Result<Self> {
+    let cache_filepath = cache_dirpath.join(Self::CACHE_FILE_NAME);
+    let options = SqliteConnectOptions::new().filename(cache_filepath).create_if_missing(true);
 
-      return Ok(Self {
-        path: Some(path.clone()),
-        files: HashMap::default(),
-      });
+    Self::from_options(options.journal_mode(SqliteJournalMode::Wal)).await
+  }
+
+  pub async fn is_file_cached(&self, file_path: &Path, file_modified: &DateTime<Utc>) -> Result<bool> {
+    // TODO(enricozb): try writing an EXISTS query to check performance
+    let Some(cache_file_info) = self.get_file_info(file_path).await? else { return false.ok() };
+    let is_cached = &cache_file_info.modified == file_modified && cache_file_info.is_fully_parsed;
+
+    is_cached.ok()
+  }
+
+  async fn get_file_info(&self, file_path: &Path) -> Result<Option<FileInfo>> {
+    sqlx::query_as("SELECT modified, is_fully_parsed FROM file WHERE file.path = $1")
+      .bind(file_path.as_bytes())
+      .fetch_optional(&self.pool)
+      .await
+      .context("failed to get file info")
+  }
+
+  pub async fn insert_file(&self, file_path: &Path, file_modified: &DateTime<Utc>) -> Result<()> {
+    sqlx::query(
+      "
+        INSERT INTO file (path, modified)
+          VALUES ($1, $2)
+        ON CONFLICT DO UPDATE SET
+          modified = excluded.modified,
+          is_fully_parsed = FALSE
+      ",
+    )
+    .bind(file_path.as_bytes())
+    .bind(file_modified)
+    .execute(&self.pool)
+    .await
+    .map(Ignore::ignore)
+    .context("failed to insert file info")
+  }
+
+  async fn insert_symbols_impl(&self, file_path_bytes: &[u8], symbols: &[Symbol]) -> Result<()> {
+    let mut query = QueryBuilder::new("INSERT INTO symbol (file_path, kind, language, line, column, content, leading, trailing)");
+    query.push_values(symbols, |mut query, symbol| {
+      query.push_bind(file_path_bytes);
+      query.push_bind(symbol.kind);
+      query.push_bind(symbol.language);
+      query.push_bind(symbol.line);
+      query.push_bind(symbol.column);
+      query.push_bind(&symbol.content);
+      query.push_bind(&symbol.leading);
+      query.push_bind(&symbol.trailing);
+    });
+
+    query.build().execute(&self.pool).await.context("failed to insert symbols")?;
+
+    ().ok()
+  }
+
+  pub async fn insert_symbols(&self, file_path: &Path, symbols: &[Symbol]) -> Result<()> {
+    let file_path_bytes = file_path.as_bytes();
+
+    sqlx::query("DELETE FROM symbol WHERE file_path = $1")
+      .bind(file_path_bytes)
+      .execute(&self.pool)
+      .await
+      .context("failed to delete stale symbols")?;
+
+    for symbols_chunk in symbols.chunks(100) {
+      self.insert_symbols_impl(file_path_bytes, symbols_chunk).await?;
     }
 
-    let file = File::open(&path).context("open")?;
-
-    Ok(Self {
-      path: Some(path.clone()),
-      files: serde_json::from_reader(file)
-        .context("failed to parse cache")
-        .warn()
-        .unwrap_or_default(),
-    })
+    ().ok()
   }
 
-  /// Returns the [`FileInfo`] for file at a given path, if any.
-  pub fn get_file_info(&self, path: &PathBuf) -> Option<&FileInfo> {
-    self.files.get(path)
+  pub async fn set_file_is_fully_parsed(&self, file_path: &Path) -> Result<()> {
+    sqlx::query("UPDATE file SET is_fully_parsed = TRUE WHERE path = $1")
+      .bind(file_path.as_bytes())
+      .execute(&self.pool)
+      .await
+      .map(Ignore::ignore)
+      .context("failed to set is_fully_parsed for file info")
   }
 
-  /// Inserts a new [`FileInfo`] for a file at a given path.
-  pub fn insert_file_info(&mut self, language: Language, path: PathBuf, modified: SystemTime) {
-    self.files.insert(
-      path,
-      FileInfo {
-        language,
-        modified,
-        symbols: Vec::new(),
-      },
-    );
+  pub fn get_symbols<'a, 'path>(&'a self, file_path: &'path Path) -> impl Stream<Item = Result<Symbol, sqlx::Error>> + 'path
+  where
+    'a: 'path,
+  {
+    sqlx::query_as("SELECT * FROM symbol WHERE symbol.file_path = $1")
+      .bind(file_path.as_bytes())
+      .fetch_many(&self.pool)
+      .filter_map(async |row| row.map(Either::right).transpose())
   }
 
-  /// Inserts a new [`Symbol`] for a file at a given path.
-  ///
-  /// [`insert_file_info`] must be called first on this path.
-  pub fn insert_symbol<P, T: Into<String>>(&mut self, path: &Path, symbol: Symbol<P, T>) -> Result<(), anyhow::Error> {
-    self
-      .files
-      .get_mut(path)
-      .with_context(|| format!("inserting symbol into unknown path: {path:?}"))?
-      .symbols
-      .push(symbol.forget_path());
+  pub async fn delete_stale_file_paths(&self, file_paths: &HashSet<PathBuf>) -> Result<()> {
+    let cached_file_paths = self.get_file_paths();
+    futures::pin_mut!(cached_file_paths);
 
-    Ok(())
+    while let Some(file_path) = cached_file_paths.next().await {
+      if !file_paths.contains(&file_path) {
+        self.delete_file(&file_path).await?;
+      }
+    }
+
+    ().ok()
   }
 
-  /// Save a cache to its path.
-  pub fn save(&self) -> Result<(), anyhow::Error> {
-    let Some(path) = &self.path else {
-      return Ok(());
-    };
+  async fn delete_file(&self, file_path: &Path) -> Result<()> {
+    let file_path_bytes = file_path.as_bytes();
 
-    let json = serde_json::to_string(&self.files).context("to_string")?;
+    sqlx::query("DELETE FROM file WHERE path = $1")
+      .bind(file_path_bytes)
+      .execute(&self.pool)
+      .await
+      .context("failed to file")?;
 
-    std::fs::write(path, json).context("write")
+    ().ok()
+  }
+
+  fn get_file_paths(&self) -> impl Stream<Item = PathBuf> {
+    sqlx::query_as::<Sqlite, RawPath>("SELECT path FROM file")
+      .fetch_many(&self.pool)
+      .filter_map(async |row| row.ok()?.right()?.convert::<PathBuf>().some())
+  }
+
+  async fn from_options(options: SqliteConnectOptions) -> Result<Self> {
+    let pool = SqlitePool::connect_with(options)
+      .await
+      .context("failed to create sqlite connection pool")?;
+    let cache = Self { pool };
+
+    cache.initialize().await?;
+
+    cache.ok()
+  }
+
+  async fn initialize(&self) -> Result<()> {
+    sqlx::migrate!("src/cache/migrations")
+      .run(&self.pool)
+      .await
+      .context("failed to migrate")?;
+
+    ().ok()
   }
 }

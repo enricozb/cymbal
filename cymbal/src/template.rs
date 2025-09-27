@@ -1,7 +1,7 @@
-use anyhow::Context;
+use anyhow::{Context, Result};
 use tree_sitter::{Query as TreeSitterQuery, QueryMatch};
 
-use crate::ext::ResultExt;
+use crate::ext::{IntoExt, StrExt};
 
 pub struct Template {
   items: Vec<Item>,
@@ -13,7 +13,7 @@ pub enum Item {
 }
 
 impl Template {
-  pub fn parse<S: AsRef<str>>(s: S, query: &TreeSitterQuery) -> Result<Self, anyhow::Error> {
+  pub fn parse<S: AsRef<str>>(s: S, query: &TreeSitterQuery) -> Result<Self> {
     let s = s.as_ref();
     let mut items = Vec::new();
     let mut rest = s;
@@ -23,14 +23,10 @@ impl Template {
         items.push(Item::Text(rest[..start].to_string()));
       }
 
-      let Some(end) = rest[start..].find('}') else {
-        anyhow::bail!("Unmatched '{{' in template")
-      };
+      let Some(end) = rest[start..].find('}') else { anyhow::bail!("Unmatched '{{' in template") };
 
       let name = &rest[start + 1..start + end];
-      let index = query
-        .capture_index_for_name(name)
-        .with_context(|| "non-captured name {name:?}")?;
+      let index = query.capture_index_for_name(name).with_context(|| "non-captured name {name:?}")?;
       items.push(Item::Index(index));
 
       rest = &rest[start + end + 1..];
@@ -43,17 +39,19 @@ impl Template {
     Ok(Template { items })
   }
 
-  pub fn render(&self, m: &QueryMatch, content: &str) -> Result<String, anyhow::Error> {
+  pub fn render<S: AsRef<[u8]>>(&self, m: &QueryMatch, content: S) -> Result<String> {
+    let content = content.as_ref();
+
     self
       .items
       .iter()
-      .map(|item| match item {
-        Item::Text(s) => s,
+      .filter_map(|item| match item {
+        Item::Text(s) => s.as_str().some(),
         Item::Index(idx) => m
           .captures
           .iter()
           .find(|c| *idx == c.index)
-          .map_or("", |c| &content[c.node.start_byte()..c.node.end_byte()]),
+          .map_or("".some(), |c| (&content[c.node.start_byte()..c.node.end_byte()]).to_str()),
       })
       .collect::<Vec<&str>>()
       .join("")

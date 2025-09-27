@@ -1,17 +1,14 @@
 use std::collections::HashMap;
 
-use anyhow::Context;
+use anyhow::{Context, Result};
 use indexmap::IndexMap;
 use serde::Deserialize;
 use tree_sitter::{Language as TreeSitterLanguage, Query as TreeSitterQuery};
 
-use crate::{
-  config::{Config, Language, LanguageQueries, Lazy, Query},
-  ext::{OptionExt, ResultExt},
-  symbol::Kind as SymbolKind,
-  template::Template,
-  utils::OneOrMany,
-};
+use crate::config::{Config, Language, Query, Template};
+use crate::ext::IntoExt;
+use crate::symbol::Kind;
+use crate::utils::{Lazy, OneOrMany};
 
 /// A config that explicitly represents the shape of the config TOML file.
 /// This is intended to be filtered and parsed into a [`Config`].
@@ -19,45 +16,6 @@ use crate::{
 pub struct RawConfig {
   #[serde(flatten)]
   pub languages: HashMap<Language, RawLanguageQueries>,
-}
-
-#[derive(Clone, Deserialize)]
-pub struct RawLanguageQueries {
-  #[serde(flatten)]
-  queries: IndexMap<SymbolKind, OneOrMany<RawQuery>>,
-}
-
-#[derive(Clone, Deserialize)]
-#[serde(untagged)]
-enum RawQuery {
-  Bare(String),
-  Transformed {
-    query: String,
-    #[serde(default)]
-    leading: String,
-    #[serde(default)]
-    trailing: String,
-  },
-}
-
-impl RawConfig {
-  /// Returns a copy of this config containing only the provided language.
-  pub fn for_language(&self, language: Language) -> Self {
-    Self {
-      languages: self
-        .languages
-        .iter()
-        .filter(|(l, _)| *l == &language)
-        .filter_map(|(l, qs)| if *l == language { (*l, qs.clone()).some() } else { None })
-        .collect(),
-    }
-  }
-}
-
-impl Default for RawConfig {
-  fn default() -> Self {
-    toml::from_str(super::DEFAULT_CONFIG).unwrap()
-  }
 }
 
 impl From<RawConfig> for Config {
@@ -71,21 +29,19 @@ impl From<RawConfig> for Config {
           Lazy::new(Box::new(move || {
             let ts_language = language.as_tree_sitter();
 
-            let queries: IndexMap<SymbolKind, Vec<Query>> = language_config
+            language_config
               .queries
               .into_iter()
               .map(|(symbol_kind, queries)| {
                 let queries = queries
                   .into_iter()
                   .map(|raw_query| raw_query.into_query(&ts_language))
-                  .collect::<Result<_, _>>()?;
+                  .collect::<Result<_>>()?;
 
-                Ok::<_, anyhow::Error>((symbol_kind, queries))
+                (symbol_kind, queries).ok()
               })
-              .collect::<Result<_, _>>()
-              .unwrap();
-
-            LanguageQueries { queries }
+              .collect::<Result<_>>()
+              .unwrap()
           })),
         )
       })
@@ -93,6 +49,30 @@ impl From<RawConfig> for Config {
 
     Self { languages }
   }
+}
+
+#[derive(Clone, Deserialize)]
+pub struct RawLanguageQueries {
+  #[serde(flatten)]
+  queries: IndexMap<Kind, OneOrMany<RawQuery>>,
+}
+
+#[derive(Clone, Deserialize)]
+#[serde(untagged)]
+enum RawQuery {
+  /// Queries which have no leading/trailing text, and result in symbols defined
+  /// exactly by text in the captured by the `@symbol` named capture.
+  Bare(String),
+  /// Queries which have custom named captures other than `@symbol` (such as
+  /// `@class`, `@trait`), which are then referenced in the leading/trailing
+  /// template strings. See the [`Config`] and [`Template`] docs for details.
+  WithContext {
+    query: String,
+    #[serde(default)]
+    leading: Option<String>,
+    #[serde(default)]
+    trailing: Option<String>,
+  },
 }
 
 impl RawQuery {
@@ -104,16 +84,12 @@ impl RawQuery {
         trailing: None,
       },
 
-      Self::Transformed {
-        leading,
-        query,
-        trailing,
-      } => {
+      Self::WithContext { leading, query, trailing } => {
         let ts = TreeSitterQuery::new(ts_language, &query).context("failed to parse query")?;
 
         Query {
-          leading: Template::parse(leading, &ts).context("leading")?.some(),
-          trailing: Template::parse(trailing, &ts).context("trailing")?.some(),
+          leading: leading.map(|t| Template::parse(t, &ts).context("leading")).transpose()?,
+          trailing: trailing.map(|t| Template::parse(t, &ts).context("trailing")).transpose()?,
           ts,
         }
       }

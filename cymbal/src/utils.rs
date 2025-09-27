@@ -1,29 +1,25 @@
-use serde::Deserialize;
+mod one_or_many;
 
-#[derive(Clone, Deserialize)]
-#[serde(untagged)]
-pub enum OneOrMany<T> {
-  One(T),
-  Many(Vec<T>),
-}
+use std::{ffi::OsString, path::PathBuf, sync::LazyLock};
 
-impl<T> From<OneOrMany<T>> for Vec<T> {
-  fn from(from: OneOrMany<T>) -> Self {
-    match from {
-      OneOrMany::One(val) => vec![val],
-      OneOrMany::Many(vec) => vec,
-    }
+pub use self::one_or_many::*;
+
+pub type Lazy<T> = LazyLock<T, Box<dyn FnOnce() -> T + Send>>;
+
+#[derive(Clone, Debug, sqlx::Type, sqlx::FromRow)]
+#[sqlx(transparent)]
+pub struct RawPath(Vec<u8>);
+
+impl From<PathBuf> for RawPath {
+  fn from(file_path: PathBuf) -> Self {
+    Self(file_path.into_os_string().into_encoded_bytes())
   }
 }
 
-impl<T> IntoIterator for OneOrMany<T> {
-  type Item = T;
-  type IntoIter = std::vec::IntoIter<T>;
+impl From<RawPath> for PathBuf {
+  fn from(RawPath(bytes): RawPath) -> Self {
+    let os_string = unsafe { OsString::from_encoded_bytes_unchecked(bytes) };
 
-  fn into_iter(self) -> Self::IntoIter {
-    match self {
-      OneOrMany::One(val) => vec![val].into_iter(),
-      OneOrMany::Many(vec) => vec.into_iter(),
-    }
+    os_string.into()
   }
 }

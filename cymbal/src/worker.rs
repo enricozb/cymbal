@@ -1,113 +1,113 @@
-use std::{path::PathBuf, sync::Arc, thread::JoinHandle, time::SystemTime};
+use std::path::Path;
 
-use anyhow::Context;
-use crossbeam::channel::Receiver;
-use parking_lot::RwLock;
+use anyhow::Result;
+use chrono::{DateTime, Utc};
+use futures::{Stream, StreamExt};
 
-use crate::{cache::Cache, config::Config, parser::Parser, symbol::Symbol, writer::Writer};
+use crate::cache::Cache;
+use crate::channel::{FileTask, Receiver};
+use crate::config::Config;
+use crate::ext::{IntoExt, TryStreamExt};
+use crate::parser::Parser;
+use crate::symbol::Symbol;
 
 pub struct Worker {
+  cache: Option<Cache>,
   config: &'static Config,
-  cache: Arc<RwLock<Cache>>,
-  files: Receiver<PathBuf>,
-  writer: Writer,
+  receiver: Receiver,
+  delimiter: char,
+  separator: char,
 }
 
 impl Worker {
-  pub fn new(config: &'static Config, cache: Arc<RwLock<Cache>>, files: Receiver<PathBuf>, writer: Writer) -> Self {
+  pub fn new(cache: Option<Cache>, config: &'static Config, receiver: Receiver, delimiter: char, separator: char) -> Self {
     Self {
-      config,
       cache,
-      files,
-      writer,
+      config,
+      receiver,
+      delimiter,
+      separator,
     }
   }
 
-  pub fn spawn(self) -> JoinHandle<Result<(), anyhow::Error>> {
-    std::thread::spawn(move || {
-      while let Ok(path) = self.files.recv() {
-        let modified = std::fs::metadata(&path)
-          .and_then(|m| m.modified())
-          .with_context(|| format!("failed to get metadata for {path:?}"))?;
+  async fn process_file_task(&self, file_task: FileTask) -> Result<()> {
+    let FileTask {
+      file_path,
+      file_modified,
+      language,
+    } = &file_task;
 
-        if self.use_cached_entries(&path, modified)? {
-          continue;
-        }
+    let Some(cache) = &self.cache else {
+      let symbol_stream = Parser::new(file_path, *language, self.config).symbol_stream().await?;
+      self.emit_symbols(file_path, symbol_stream).await;
 
-        self.parse_file(&path, modified)?;
-      }
-
-      Ok(())
-    })
-  }
-
-  /// Attempts to use the cache to compute a paths entries.
-  ///
-  /// Returns true if the cache's entries were used.
-  fn use_cached_entries(&self, path: &PathBuf, modified: SystemTime) -> Result<bool, anyhow::Error> {
-    if let Some(file_info) = self.cache.read().get_file_info(path) {
-      // if the cached file and the current file have the same modified timestamp,
-      // use the entries from the cache.
-      if modified == file_info.modified {
-        for symbol in &file_info.symbols {
-          // cached entries don't contain paths so they are re-inserted here.
-          self
-            .writer
-            .send(
-              file_info.language,
-              &Symbol {
-                path: path.as_os_str().to_string_lossy(),
-                span: symbol.span,
-                lead: &symbol.lead,
-                text: &symbol.text,
-                tail: &symbol.tail,
-                kind: symbol.kind,
-              },
-            )
-            .context("failed to send symbol to writer")?;
-        }
-
-        return Ok(true);
-      }
-    }
-
-    Ok(false)
-  }
-
-  /// Parses a file and inserts its entries into the cache.
-  fn parse_file(&self, path: &PathBuf, modified: SystemTime) -> Result<(), anyhow::Error> {
-    let Some(parser) = Parser::from_path(self.config, path) else {
-      return Ok(());
+      return ().ok();
     };
 
-    self
-      .cache
-      .write()
-      .insert_file_info(parser.language, path.clone(), modified);
+    if cache.is_file_cached(file_path, file_modified).await? {
+      let symbol_stream = cache.get_symbols(file_path).filter_ok();
+      self.emit_symbols(file_path, symbol_stream).await;
 
-    parser.on_symbol(|symbol| {
-      self
-        .writer
-        .send(
-          parser.language,
-          &Symbol {
-            path: path.as_os_str().to_string_lossy(),
-            span: symbol.span,
-            lead: symbol.lead,
-            text: symbol.text,
-            tail: symbol.tail,
-            kind: symbol.kind,
-          },
-        )
-        .context("failed to send symbol")?;
+      return ().ok();
+    }
 
-      self
-        .cache
-        .write()
-        .insert_symbol(path, symbol)
-        .context("failed to insert symbol into cache")?;
+    let symbol_stream = Parser::new(file_path, *language, self.config).symbol_stream().await?;
 
-      Ok(())
-    })
+    self.cache_and_emit_symbols(cache, file_path, file_modified, symbol_stream).await
+  }
+
+  async fn emit_symbols(&self, file_path: &Path, symbol_stream: impl Stream<Item = Symbol>) {
+    symbol_stream
+      .map(|symbol| self.print_symbol(file_path, &symbol))
+      .collect::<()>()
+      .await;
+  }
+
+  async fn cache_and_emit_symbols(
+    &self,
+    cache: &Cache,
+    file_path: &Path,
+    file_modified: &DateTime<Utc>,
+    symbol_stream: impl Stream<Item = Symbol>,
+  ) -> Result<()> {
+    let mut symbols = Vec::new();
+    futures::pin_mut!(symbol_stream);
+
+    while let Some(symbol) = symbol_stream.next().await {
+      self.print_symbol(file_path, &symbol);
+
+      symbols.push(symbol);
+    }
+
+    cache.insert_file(file_path, file_modified).await?;
+    cache.insert_symbols(file_path, &symbols).await?;
+    cache.set_file_is_fully_parsed(file_path).await?;
+
+    ().ok()
+  }
+
+  fn print_symbol(&self, file_path: &Path, symbol: &Symbol) {
+    print!(
+      "{lang}{dlm}{kind}{dlm}{path}{dlm}{line}{dlm}{col}{dlm}{lead}{dlm}{text}{dlm}{trail}{end}",
+      lang = symbol.language.colored_abbreviation(),
+      kind = symbol.kind.colored_abbreviation(),
+      path = file_path.display(),
+      line = symbol.line,
+      col = symbol.column,
+      lead = symbol.leading_str(),
+      text = symbol.content,
+      trail = symbol.trailing_str(),
+      dlm = self.delimiter,
+      end = self.separator,
+    );
+  }
+
+  pub async fn run(self) -> Result<()> {
+    // TODO(enricozb): try using `self.receiver` as a `Stream`.
+    while let Ok(file_task) = self.receiver.recv().await {
+      self.process_file_task(file_task).await?;
+    }
+
+    ().ok()
   }
 }
