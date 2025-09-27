@@ -1,16 +1,20 @@
-use std::path::Path;
+use std::{
+  collections::HashSet,
+  path::{Path, PathBuf},
+};
 
 use anyhow::{Context, Result};
 use chrono::{DateTime, Utc};
 use futures::{Stream, StreamExt};
 use sqlx::{
-  Either, QueryBuilder, SqlitePool,
+  Either, QueryBuilder, Sqlite, SqlitePool,
   sqlite::{SqliteConnectOptions, SqliteJournalMode},
 };
 
 use crate::{
   ext::{Ignore, IntoExt, PathExt},
   symbol::{FileInfo, Symbol},
+  utils::RawPath,
 };
 
 #[derive(Clone)]
@@ -105,7 +109,7 @@ impl Cache {
       .context("failed to set is_fully_parsed for file info")
   }
 
-  pub fn symbols<'a, 'path>(&'a self, file_path: &'path Path) -> impl Stream<Item = Result<Symbol, sqlx::Error>> + 'path
+  pub fn get_symbols<'a, 'path>(&'a self, file_path: &'path Path) -> impl Stream<Item = Result<Symbol, sqlx::Error>> + 'path
   where
     'a: 'path,
   {
@@ -113,6 +117,37 @@ impl Cache {
       .bind(file_path.as_bytes())
       .fetch_many(&self.pool)
       .filter_map(async |row| row.map(Either::right).transpose())
+  }
+
+  pub async fn delete_stale_file_paths(&self, file_paths: HashSet<PathBuf>) -> Result<()> {
+    let cached_file_paths = self.get_file_paths();
+    futures::pin_mut!(cached_file_paths);
+
+    while let Some(file_path) = cached_file_paths.next().await {
+      if !file_paths.contains(&file_path) {
+        self.delete_file(&file_path).await?;
+      }
+    }
+
+    ().ok()
+  }
+
+  async fn delete_file(&self, file_path: &Path) -> Result<()> {
+    let file_path_bytes = file_path.as_bytes();
+
+    sqlx::query("DELETE FROM file WHERE path = $1")
+      .bind(file_path_bytes)
+      .execute(&self.pool)
+      .await
+      .context("failed to file")?;
+
+    ().ok()
+  }
+
+  fn get_file_paths(&self) -> impl Stream<Item = PathBuf> {
+    sqlx::query_as::<Sqlite, RawPath>("SELECT path FROM file")
+      .fetch_many(&self.pool)
+      .filter_map(async |row| row.ok()?.right()?.convert::<PathBuf>().some())
   }
 
   async fn from_options(options: SqliteConnectOptions) -> Result<Self> {

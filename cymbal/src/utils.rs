@@ -6,7 +6,7 @@ pub use self::one_or_many::*;
 
 pub type Lazy<T> = LazyLock<T, Box<dyn FnOnce() -> T + Send>>;
 
-#[derive(Clone, Debug, sqlx::Type)]
+#[derive(Clone, Debug, sqlx::Type, sqlx::FromRow)]
 #[sqlx(transparent)]
 pub struct RawPath(Vec<u8>);
 

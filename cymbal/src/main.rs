@@ -27,7 +27,7 @@ async fn main() -> Result<()> {
   let cache = args.cache().await?;
   let config = args.config().await?.leak();
   let (sender, receiver) = args.channel();
-  let walker = Walker::new(args.search_path, sender).spawn();
+  let walker = Walker::new(args.search_path, sender, cache.clone()).spawn();
 
   // TODO:
   // - synchronous walker spawning async worker tasks, joining at the end.

@@ -9,7 +9,7 @@ CREATE TABLE file (
 );
 
 CREATE TABLE symbol (
-  file_path REFERENCES file (path) NOT NULL,
+  file_path REFERENCES file (path) ON DELETE CASCADE NOT NULL,
   kind INTEGER NOT NULL,
   language INTEGER NOT NULL,
   line INTEGER NOT NULL,
@@ -20,3 +20,5 @@ CREATE TABLE symbol (
   leading TEXT,
   trailing TEXT
 );
+
+CREATE INDEX symbols_for_file ON symbol (file_path);

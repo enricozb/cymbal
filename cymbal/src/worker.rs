@@ -37,7 +37,7 @@ impl Worker {
     };
 
     if cache.is_file_cached(file_path, file_modified).await? {
-      let symbol_stream = cache.symbols(file_path).filter_ok();
+      let symbol_stream = cache.get_symbols(file_path).filter_ok();
       self.emit_symbols(file_path, symbol_stream).await;
 
       return ().ok();

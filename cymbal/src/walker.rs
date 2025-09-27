@@ -1,9 +1,11 @@
+use std::collections::HashSet;
 use std::path::PathBuf;
 
 use anyhow::Result;
 use ignore::Walk;
 use tokio::task::JoinHandle;
 
+use crate::cache::Cache;
 use crate::channel::{FileTask, Sender};
 use crate::config::Language;
 use crate::ext::IntoExt;
@@ -11,11 +13,12 @@ use crate::ext::IntoExt;
 pub struct Walker {
   path: PathBuf,
   sender: Sender,
+  cache: Option<Cache>,
 }
 
 impl Walker {
-  pub fn new(path: PathBuf, sender: Sender) -> Self {
-    Self { path, sender }
+  pub fn new(path: PathBuf, sender: Sender, cache: Option<Cache>) -> Self {
+    Self { path, sender, cache }
   }
 
   pub fn spawn(self) -> JoinHandle<Result<()>> {
@@ -35,10 +38,17 @@ impl Walker {
       (file_path, file_modified, language).some()
     });
 
+    let mut file_paths = HashSet::new();
+
     for (file_path, file_modified, language) in walker {
-      let file_task = FileTask::new(file_path, file_modified.into(), language);
+      let file_task = FileTask::new(file_path.clone(), file_modified.into(), language);
 
       self.sender.send(file_task).await?;
+      file_paths.insert(file_path.clone());
+    }
+
+    if let Some(cache) = &self.cache {
+      cache.delete_stale_file_paths(file_paths).await?;
     }
 
     ().ok()
