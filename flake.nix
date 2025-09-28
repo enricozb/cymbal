@@ -22,7 +22,7 @@
 
         packages.default = rust-platform.buildRustPackage {
           pname = "cymbal";
-          version = "0.8.6";
+          version = "0.8.7";
 
           src = ./.;
 
