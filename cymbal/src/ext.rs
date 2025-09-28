@@ -30,6 +30,10 @@ pub impl<T> T {
   fn convert<U: From<T>>(self) -> U {
     self.into()
   }
+
+  fn ready(self) -> impl Future<Output = T> {
+    std::future::ready(self)
+  }
 }
 
 #[extend::ext(name=ResultExt)]

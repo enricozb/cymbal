@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::path::Path;
 
 use anyhow::Result;
@@ -62,6 +63,7 @@ impl Worker {
 
   async fn emit_symbols(&self, file_path: &Path, symbol_stream: impl Stream<Item = Symbol>) {
     symbol_stream
+      .unique_symbols()
       .map(|symbol| self.print_symbol(file_path, &symbol))
       .collect::<()>()
       .await;
@@ -74,6 +76,7 @@ impl Worker {
     file_modified: &DateTime<Utc>,
     symbol_stream: impl Stream<Item = Symbol>,
   ) -> Result<()> {
+    let symbol_stream = symbol_stream.unique_symbols();
     let mut symbols = Vec::new();
     futures::pin_mut!(symbol_stream);
 
@@ -113,5 +116,19 @@ impl Worker {
     }
 
     ().ok()
+  }
+}
+
+#[extend::ext]
+impl<T: Stream<Item = Symbol>> T {
+  fn unique_symbols(self) -> impl Stream<Item = Symbol> {
+    self.scan(HashSet::<(i64, i64)>::new(), |symbol_positions, symbol| {
+      let position = (symbol.line, symbol.column);
+      if symbol_positions.replace(position).is_none() {
+        symbol.some().ready()
+      } else {
+        None.ready()
+      }
+    })
   }
 }
