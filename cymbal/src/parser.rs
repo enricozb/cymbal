@@ -76,6 +76,7 @@ impl<'a> Parser<'a> {
             kind: *kind,
             language,
             line: row as i64 + 1,
+            // TODO(enricozb): does column need to be incremented as well?
             column: column as i64,
             content: symbol_content_str.to_string(),
             leading,

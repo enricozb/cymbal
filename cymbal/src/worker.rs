@@ -124,6 +124,10 @@ impl<T: Stream<Item = Symbol>> T {
   fn unique_symbols(self) -> impl Stream<Item = Symbol> {
     let mut symbol_positions = HashSet::<(i64, i64)>::new();
 
+    // TODO(enricozb): it looks like some symbols are appearing before others,
+    // and precedence is not respected. Specifically in the rust language it
+    // seems that methods, despite appearing before functions in the default
+    // config, do not override the functions in the outputted symbols.
     self.filter_map(move |symbol| {
       let position = (symbol.line, symbol.column);
       if symbol_positions.contains(&position) {
