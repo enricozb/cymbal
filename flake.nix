@@ -12,7 +12,25 @@
           file = ./rust-toolchain.toml;
           sha256 = "sha256-+9FmLhAOezBZCOziO0Qct1NOrfpjNsXxc/8I0c7BdKE=";
         };
+        rust-platform = pkgs.makeRustPlatform {
+          cargo = rust-toolchain;
+          rustc = rust-toolchain;
+        };
       in {
         devShells.default = pkgs.mkShell { packages = [ rust-toolchain pkgs.cargo-flamegraph ]; };
+
+        packages.default = rust-platform.buildRustPackage {
+          pname = "cymbal";
+          version = "0.8.2";
+
+          src = ./.;
+
+          cargoLock = {
+            lockFile = ./Cargo.lock;
+            outputHashes = {
+              "tree-sitter-fish-3.5.1" = "sha256-ED1lJ1GlbT/ptr+S9J1mD9fnfuewPko2rvj/qMVPCso=";
+            };
+          };
+        };
       });
 }
