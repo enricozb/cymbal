@@ -122,12 +122,15 @@ impl Worker {
 #[extend::ext]
 impl<T: Stream<Item = Symbol>> T {
   fn unique_symbols(self) -> impl Stream<Item = Symbol> {
-    self.scan(HashSet::<(i64, i64)>::new(), |symbol_positions, symbol| {
+    let mut symbol_positions = HashSet::<(i64, i64)>::new();
+
+    self.filter_map(move |symbol| {
       let position = (symbol.line, symbol.column);
-      if symbol_positions.replace(position).is_none() {
-        symbol.some().ready()
-      } else {
+      if symbol_positions.contains(&position) {
         None.ready()
+      } else {
+        symbol_positions.insert(position);
+        symbol.some().ready()
       }
     })
   }
