@@ -14,11 +14,17 @@ pub struct Walker {
   path: PathBuf,
   sender: Sender,
   cache: Option<Cache>,
+  should_clean_cache: bool,
 }
 
 impl Walker {
-  pub fn new(path: PathBuf, sender: Sender, cache: Option<Cache>) -> Self {
-    Self { path, sender, cache }
+  pub fn new(path: PathBuf, sender: Sender, cache: Option<Cache>, should_clean_cache: bool) -> Self {
+    Self {
+      path,
+      sender,
+      cache,
+      should_clean_cache,
+    }
   }
 
   pub fn spawn(self) -> JoinHandle<Result<()>> {
@@ -47,7 +53,9 @@ impl Walker {
       file_paths.insert(file_path.clone());
     }
 
-    if let Some(cache) = &self.cache {
+    if let Some(cache) = &self.cache
+      && self.should_clean_cache
+    {
       cache.delete_stale_file_paths(&file_paths).await?;
     }
 

@@ -27,11 +27,14 @@ async fn main() -> Result<()> {
   let cache = args.cache().await?;
   let config = args.config().await?.leak();
   let (sender, receiver) = args.channel();
-  let walker = Walker::new(args.search_path().to_path_buf(), sender, cache.clone()).spawn();
   let delimiter = args.delimiter();
   let separator = args.separator();
+  let should_clean_cache = !args.is_filtering();
+  let walker = Walker::new(args.search_path().to_path_buf(), sender, cache.clone(), should_clean_cache).spawn();
 
   // TODO:
+  // - don't clean cache when filtering
+  // - dedup symbols at the same start
   // - tree sitter languages and queries must be shared
 
   let mut workers = JoinSet::new();

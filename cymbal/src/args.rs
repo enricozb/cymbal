@@ -128,6 +128,11 @@ impl Args {
     self.separator
   }
 
+  /// Whether additional restrictions on the set of walked files are present.
+  pub fn is_filtering(&self) -> bool {
+    self.search_path.is_file() || self.language().is_some()
+  }
+
   fn language(&self) -> Option<Language> {
     self.language.or(self.extension.as_ref().and_then(Language::from_extension))
   }
