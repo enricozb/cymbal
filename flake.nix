@@ -3,7 +3,6 @@
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
   inputs.flake-utils.url = "github:numtide/flake-utils";
   inputs.fenix.url = "github:nix-community/fenix/monthly";
-  inputs.flake-compat.url = "https://flakehub.com/f/edolstra/flake-compat/1.tar.gz";
 
   outputs = { self, nixpkgs, flake-utils, fenix, ... }:
     flake-utils.lib.eachDefaultSystem (system:
@@ -22,7 +21,7 @@
 
         packages.default = rust-platform.buildRustPackage {
           pname = "cymbal";
-          version = "0.8.7";
+          version = "0.8.8";
 
           src = ./.;
 
