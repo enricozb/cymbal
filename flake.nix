@@ -9,7 +9,7 @@
     flake = false;
   };
 
-  outputs = { self, nixpkgs, flake-utils, fenix, ... }:
+  outputs = { self, nixpkgs, flake-utils, fenix, flake-compat }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
