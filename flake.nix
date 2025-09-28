@@ -5,7 +5,7 @@
   inputs.fenix.url = "github:nix-community/fenix/monthly";
   inputs.flake-compat.url = "https://flakehub.com/f/edolstra/flake-compat/1.tar.gz";
 
-  outputs = { self, nixpkgs, flake-utils, fenix, flake-compat }:
+  outputs = { self, nixpkgs, flake-utils, fenix, ... }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
