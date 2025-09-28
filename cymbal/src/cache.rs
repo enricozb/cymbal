@@ -8,7 +8,7 @@ use chrono::{DateTime, Utc};
 use futures::{Stream, StreamExt};
 use sqlx::{
   Either, QueryBuilder, Sqlite, SqlitePool,
-  sqlite::{SqliteConnectOptions, SqliteJournalMode},
+  sqlite::{SqliteConnectOptions, SqliteJournalMode, SqliteSynchronous},
 };
 
 use crate::{
@@ -31,9 +31,13 @@ impl Cache {
     }
 
     let cache_filepath = cache_dir_path.join(Self::CACHE_FILE_NAME);
-    let options = SqliteConnectOptions::new().filename(cache_filepath).create_if_missing(true);
+    let options = SqliteConnectOptions::new()
+      .filename(cache_filepath)
+      .create_if_missing(true)
+      .journal_mode(SqliteJournalMode::Wal)
+      .synchronous(SqliteSynchronous::Normal);
 
-    Self::from_options(options.journal_mode(SqliteJournalMode::Wal)).await
+    Self::from_options(options).await
   }
 
   pub async fn is_file_cached(&self, file_path: &Path, file_modified: &DateTime<Utc>) -> Result<bool> {
