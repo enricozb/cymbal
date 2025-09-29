@@ -10,7 +10,7 @@
         pkgs = nixpkgs.legacyPackages.${system};
         rust-toolchain = fenix.packages.${system}.fromToolchainFile {
           file = ./rust-toolchain.toml;
-          sha256 = "sha256-+9FmLhAOezBZCOziO0Qct1NOrfpjNsXxc/8I0c7BdKE=";
+          sha256 = "sha256-tqagmXrHoZA9Zmu2Br6n3MzvXaLkuPzKPS3NIVdNQVQ=";
         };
         rust-platform = pkgs.makeRustPlatform {
           cargo = rust-toolchain;
@@ -21,7 +21,7 @@
 
         packages.default = rust-platform.buildRustPackage {
           pname = "cymbal";
-          version = "0.8.9";
+          version = "0.8.10";
 
           src = ./.;
 

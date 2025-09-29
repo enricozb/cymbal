@@ -1,6 +1,6 @@
 [package]
 name = "cymbal"
-version = "0.8.9"
+version = "0.8.10"
 edition = "2024"
 description = "search for symbols in a codebase"
 license = "CC0-1.0"
@@ -15,7 +15,7 @@ extend = "1.2.0"
 futures = "0.3.31"
 sqlx = { version = "0.8.6", features = ["chrono", "runtime-tokio", "sqlite"] }
 tokio = { version = "1.47.1", features = ["rt-multi-thread", "macros"] }
-toml = { version = "0.9.5", features = ["parse", "serde"] }
+toml = { version = "0.9.5", features = ["parse", "preserve_order", "serde"] }
 tree-sitter = "0.25.3"
 tree-sitter-c = "0.23.4"
 tree-sitter-cpp = "0.23.4"

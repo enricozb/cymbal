@@ -5,7 +5,7 @@ use futures::Stream;
 use serde::de::DeserializeOwned;
 use tree_sitter::Parser as TreeSitterParser;
 
-use crate::config::Language;
+use crate::{config::Language, utils::Lazy};
 
 pub trait Is<T> {
   fn is(self) -> T;
@@ -146,5 +146,15 @@ pub impl TreeSitterParser {
       .context("failed to set tree sitter parser language")?;
 
     parser.ok()
+  }
+}
+
+#[extend::ext(name=LazyExt)]
+pub impl<T> Lazy<T> {
+  fn take(self) -> T {
+    match Self::into_inner(self) {
+      Ok(value) => value,
+      Err(f) => f(),
+    }
   }
 }

@@ -1,3 +1,5 @@
+#![feature(lazy_cell_into_inner)]
+
 mod args;
 mod cache;
 mod channel;
