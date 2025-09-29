@@ -1,6 +1,6 @@
 [package]
 name = "cymbal"
-version = "0.8.10"
+version = "0.9.0"
 edition = "2024"
 description = "search for symbols in a codebase"
 license = "CC0-1.0"
