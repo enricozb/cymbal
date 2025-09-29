@@ -18,7 +18,7 @@ $ cymbal --delimiter ' ' --separator \n
 ...
 ```
 
-## Use Case: Jump to symbol from command-line
+## Use-Case: Jump to symbol from command-line
 A potential use of `cymbal` is to jump to symbols from the command-line:
 [![asciicast](https://asciinema.org/a/MzqFoRPvOqTztcuUg1PGWnUup.svg)][1]
 
@@ -137,7 +137,8 @@ Options:
 
 ## Configuration
 `cymbal` is configured with [TOML][3] on a per-language basis. See
-[default-config.toml][4] for the default configuration.
+[default-config.toml][4] for the default configuration, and
+[example-config.toml][5] for an example configuration.
 
 Each language has a set of queries for different kinds of symbols that can be
 found in that language. For example for C++,
@@ -158,7 +159,7 @@ method = [
   { leading = '{scope.1}::{scope.2}::', query = '(function_declarator declarator: (qualified_identifier scope: (_) @scope.1 name: (qualified_identifier scope: (_) @scope.2 name: (identifier) @symbol)))' },
 ]
 ```
-There is a fixed set of symbols that are valid, see [`symbol.rs`][5]. For each
+There is a fixed set of symbols that are valid, see [`symbol.rs`][6]. For each
 language, each symbol kind can have multiple queries, such as `method` above.
 For symbol kinds where only a single query is needed, a string can be used,
 like in `function` above.
@@ -174,8 +175,37 @@ be emitted. This is useful, for example, for capturing methods along with their
 class or struct as context, instead of capturing them as top-level functions.
 See the rust `method` query for an example.
 
+### Extending the Default Configuration
+To modify just a part of the default configuration, use the `[inherit]` key:
+```toml
+[inherit]
+all = true
+# or specify specific languages
+languages = ["rust", "python", "c"]
+
+[rust]
+function = "some tree-sitter query"
+```
+When using `[inherit]`, any provided language queries will take precedence over
+the inherited ones, however the inherited ones will still be present. That is,
+if a symbol matches a provided query, any inherited queries matching that same
+symbol in that same position will not emit an entry. Because of this, you can
+use the `[inherit]` key to reorder the queries in the default config. For
+example, here we give priority to the default `rust.function` queries over the
+`rust.method` queries, even though in the default config they are in the
+opposite order.
+```toml
+[inherit]
+all = true
+
+[rust]
+function = []
+method = []
+```
+
 [1]: https://asciinema.org/a/MzqFoRPvOqTztcuUg1PGWnUup
 [2]: https://github.com/junegunn/fzf
 [3]: https://toml.io/en/
 [4]: ./cymbal/default-config.toml
-[5]: ./cymbal/src/symbol.rs
+[5]: ./cymbal/example-config.toml
+[6]: ./cymbal/src/symbol.rs

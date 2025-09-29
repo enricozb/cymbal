@@ -1,4 +1,9 @@
-use std::path::{Path, PathBuf};
+use std::{
+  borrow::Borrow,
+  collections::HashMap,
+  hash::Hash,
+  path::{Path, PathBuf},
+};
 
 use anyhow::{Context, Result};
 use futures::Stream;
@@ -133,6 +138,13 @@ pub impl<T> T {
 pub impl<'a> &'a [u8] {
   fn to_str(&self) -> Option<&'a str> {
     std::str::from_utf8(self).ok()
+  }
+}
+
+#[extend::ext(name=HashMapExt)]
+pub impl<K: Hash + Eq, V> HashMap<K, V> {
+  fn restrict<Q: Borrow<K>>(mut self, keys: impl IntoIterator<Item = Q>) -> Self {
+    keys.into_iter().filter_map(|key| self.remove_entry(key.borrow())).collect()
   }
 }
 

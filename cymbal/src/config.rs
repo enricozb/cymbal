@@ -9,8 +9,14 @@ use serde::Deserialize;
 use sqlx::Type as SqlxType;
 use tree_sitter::{Language as TreeSitterLanguage, Query as TreeSitterQuery};
 
-use crate::ext::PathExt;
-use crate::{color, config::raw::RawConfig, ext::TomlExt, symbol::Kind, template::Template, utils::Lazy};
+use crate::{
+  color,
+  config::raw::RawConfig,
+  ext::{PathExt, TomlExt},
+  symbol::Kind,
+  template::Template,
+  utils::Lazy,
+};
 
 static DEFAULT_CONFIG: &str = include_str!("../default-config.toml");
 

@@ -1,0 +1,19 @@
+# inherit from the default config
+[inherit]
+# inherit rust and python language queries from the default config
+languages = ["rust", "python"]
+# or inherit all languages
+all = true
+
+[rust]
+# reorder to give function queries higher priority over method queries
+function = []
+method = []
+# provide an additional query for extension traits using the `extend` crate
+impl = [
+  '(attribute (scoped_identifier) @attr (#eq? @attr "extend::ext") arguments: (_ "=" _ @symbol ")"))',
+]
+
+# provide a set of c queries without inheriting from the default config
+[c]
+function = "some tree-sitter query"

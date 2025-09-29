@@ -1,26 +1,39 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use anyhow::{Context, Result};
 use indexmap::IndexMap;
 use serde::Deserialize;
 use tree_sitter::{Language as TreeSitterLanguage, Query as TreeSitterQuery};
 
-use crate::config::{Config, Language, Query, Template};
-use crate::ext::IntoExt;
-use crate::symbol::Kind;
-use crate::utils::{Lazy, OneOrMany};
+use crate::{
+  config::{Config, Language, Queries, Query, Template},
+  ext::{HashMapExt, IntoExt, LazyExt},
+  symbol::Kind,
+  utils::{Lazy, OneOrMany},
+};
 
 /// A config that explicitly represents the shape of the config TOML file.
 /// This is intended to be filtered and parsed into a [`Config`].
 #[derive(Deserialize)]
 pub struct RawConfig {
+  pub inherit: Option<Inherit>,
   #[serde(flatten)]
   pub languages: HashMap<Language, RawLanguageQueries>,
 }
 
-impl From<RawConfig> for Config {
-  fn from(raw_config: RawConfig) -> Self {
-    let languages = raw_config
+impl RawConfig {
+  fn inherited_config(&self) -> HashMap<Language, Lazy<Queries>> {
+    let Some(inherit) = &self.inherit else { return HashMap::default() };
+
+    match inherit {
+      Inherit::All(false) => HashMap::default(),
+      Inherit::All(true) => Config::default().languages,
+      Inherit::Languages(languages) => Config::default().languages.restrict(languages),
+    }
+  }
+
+  fn provided_config(self) -> HashMap<Language, Lazy<Queries>> {
+    self
       .languages
       .into_iter()
       .map(|(language, language_config)| {
@@ -45,10 +58,62 @@ impl From<RawConfig> for Config {
           })),
         )
       })
-      .collect();
+      .collect()
+  }
+
+  fn merge_inherited_and_provided_queries(inherited: Lazy<Queries>, provided: Lazy<Queries>) -> Lazy<Queries> {
+    Lazy::new(Box::new(move || {
+      let inherited = Lazy::take(inherited);
+      let mut provided = Lazy::take(provided);
+
+      for (kind, inherited_queries) in inherited {
+        let Some(provided_queries) = provided.get_mut(&kind) else {
+          provided.insert(kind, inherited_queries);
+          continue;
+        };
+
+        provided_queries.extend(inherited_queries);
+      }
+
+      provided
+    }))
+  }
+
+  fn merge_inherited_and_provided_configs(
+    inherited: HashMap<Language, Lazy<Queries>>,
+    mut provided: HashMap<Language, Lazy<Queries>>,
+  ) -> HashMap<Language, Lazy<Queries>> {
+    for (language, inherited_queries) in inherited {
+      let Some(provided_queries) = provided.remove(&language) else {
+        provided.insert(language, inherited_queries);
+        continue;
+      };
+
+      provided.insert(
+        language,
+        Self::merge_inherited_and_provided_queries(inherited_queries, provided_queries),
+      );
+    }
+
+    provided
+  }
+}
+
+impl From<RawConfig> for Config {
+  fn from(raw_config: RawConfig) -> Self {
+    let inherited_config = raw_config.inherited_config();
+    let provided_config = raw_config.provided_config();
+    let languages = RawConfig::merge_inherited_and_provided_configs(inherited_config, provided_config);
 
     Self { languages }
   }
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Inherit {
+  All(bool),
+  Languages(HashSet<Language>),
 }
 
 #[derive(Clone, Deserialize)]
