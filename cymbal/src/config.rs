@@ -118,18 +118,19 @@ macro_rules! Language {
   };
 }
 
+// TODO(enricozb): compile-time assert that language names are at most 4 chars.
 Language! {
-  { "(c)", C, blue, ["c", "h"], tree_sitter_c::LANGUAGE.into() },
-  { "(c++)", Cpp, blue, ["cpp", "cc", "hh"], tree_sitter_cpp::LANGUAGE.into() },
+  { "(c)   ", C, blue, ["c", "h"], tree_sitter_c::LANGUAGE.into() },
+  { "(c++) ", Cpp, blue, ["cpp", "cc", "hh"], tree_sitter_cpp::LANGUAGE.into() },
   { "(fish)", Fish, green, ["fish"], tree_sitter_fish::language() },
-  { "(go)", Go, cyan, ["go"], tree_sitter_go::LANGUAGE.into() },
-  { "(hs)", Haskell, magenta, ["hs"], tree_sitter_haskell::LANGUAGE.into() },
+  { "(go)  ", Go, cyan, ["go"], tree_sitter_go::LANGUAGE.into() },
+  { "(hs)  ", Haskell, magenta, ["hs"], tree_sitter_haskell::LANGUAGE.into() },
   { "(json)", Json, green, ["json"], tree_sitter_json::LANGUAGE.into() },
   { "(odin)", Odin, blue, ["odin"], tree_sitter_odin::LANGUAGE.into() },
-  { "(ml)", Ocaml, yellow, ["ml"], tree_sitter_ocaml::LANGUAGE_OCAML.into() },
-  { "(py)", Python, bright_yellow, ["py"], tree_sitter_python::LANGUAGE.into() },
-  { "(rs)", Rust, yellow, ["rs"], tree_sitter_rust::LANGUAGE.into() },
-  { "(ts)", TypeScript, blue, ["js", "jsx", "ts", "tsx"], tree_sitter_typescript::LANGUAGE_TSX.into() },
+  { "(ml)  ", Ocaml, yellow, ["ml"], tree_sitter_ocaml::LANGUAGE_OCAML.into() },
+  { "(py)  ", Python, bright_yellow, ["py"], tree_sitter_python::LANGUAGE.into() },
+  { "(rs)  ", Rust, yellow, ["rs"], tree_sitter_rust::LANGUAGE.into() },
+  { "(ts)  ", TypeScript, blue, ["js", "jsx", "ts", "tsx"], tree_sitter_typescript::LANGUAGE_TSX.into() },
 }
 
 #[cfg(test)]

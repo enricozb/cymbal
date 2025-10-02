@@ -2,8 +2,7 @@ use chrono::{DateTime, Utc};
 use serde::Deserialize;
 use sqlx::Type as SqlxType;
 
-use crate::color;
-use crate::config::Language;
+use crate::{color, config::Language};
 
 #[derive(sqlx::FromRow)]
 pub struct FileInfo {

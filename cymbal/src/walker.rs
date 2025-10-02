@@ -1,14 +1,15 @@
-use std::collections::HashSet;
-use std::path::PathBuf;
+use std::{collections::HashSet, path::PathBuf};
 
 use anyhow::Result;
 use ignore::Walk;
 use tokio::task::JoinHandle;
 
-use crate::cache::Cache;
-use crate::channel::{FileTask, Sender};
-use crate::config::Language;
-use crate::ext::IntoExt;
+use crate::{
+  cache::Cache,
+  channel::{FileTask, Sender},
+  config::Language,
+  ext::IntoExt,
+};
 
 pub struct Walker {
   path: PathBuf,

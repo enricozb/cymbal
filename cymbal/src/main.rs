@@ -17,10 +17,12 @@ use anyhow::Result;
 use clap::Parser;
 use tokio::task::JoinSet;
 
-use crate::args::Args;
-use crate::ext::{IntoExt, IteratorExt, Leak};
-use crate::walker::Walker;
-use crate::worker::Worker;
+use crate::{
+  args::Args,
+  ext::{IntoExt, IteratorExt, Leak},
+  walker::Walker,
+  worker::Worker,
+};
 
 #[tokio::main]
 async fn main() -> Result<()> {

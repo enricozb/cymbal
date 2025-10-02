@@ -1,16 +1,17 @@
-use std::collections::HashSet;
-use std::path::Path;
+use std::{collections::HashSet, path::Path};
 
 use anyhow::Result;
 use chrono::{DateTime, Utc};
 use futures::{Stream, StreamExt};
 
-use crate::cache::Cache;
-use crate::channel::{FileTask, Receiver};
-use crate::config::Config;
-use crate::ext::{IntoExt, TryStreamExt};
-use crate::parser::Parser;
-use crate::symbol::Symbol;
+use crate::{
+  cache::Cache,
+  channel::{FileTask, Receiver},
+  config::Config,
+  ext::{IntoExt, TryStreamExt},
+  parser::Parser,
+  symbol::Symbol,
+};
 
 pub struct Worker {
   cache: Option<Cache>,

@@ -1,13 +1,17 @@
-use std::num::NonZero;
-use std::path::{Path, PathBuf};
+use std::{
+  num::NonZero,
+  path::{Path, PathBuf},
+};
 
 use anyhow::{Context, Result};
 use clap::Parser;
 
-use crate::cache::Cache;
-use crate::channel::{Receiver, Sender};
-use crate::config::{Config, Language};
-use crate::ext::{IntoExt, OptionExt};
+use crate::{
+  cache::Cache,
+  channel::{Receiver, Sender},
+  config::{Config, Language},
+  ext::{IntoExt, OptionExt},
+};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
