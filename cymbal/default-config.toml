@@ -150,3 +150,22 @@ function = '(haskell declarations: (declarations (signature name: (variable) @sy
 
 [json]
 constant = '(pair key: (string) @symbol)'
+
+[vine]
+module = '(item_mod (ident) @symbol)'
+struct = '(item_struct (ident) @symbol)'
+trait = '(item_trait (ident) @symbol)'
+method = [
+  { leading = '{mod}::', query = '(item_mod (ident) @mod (item_fn "." (ident) @symbol))' },
+  { leading = '{mod}::{impl}::', query = '(item_mod (ident) @mod (item_impl (ident) @impl (item_fn "." (ident) @symbol)))' },
+  { leading = '{mod}::{trait}::', query = '(item_mod (ident) @mod (item_trait (ident) @trait (item_fn "." (ident) @symbol)))' },
+  { leading = '{impl}::', query = '(item_impl (ident) @impl (item_fn "." (ident) @symbol))' },
+  { leading = '{trait}::', query = '(item_trait (ident) @trait (item_fn "." (ident) @symbol))' },
+]
+function = [
+  { leading = '{mod}::', query = '(item_mod (ident) @mod (item_fn (ident) @symbol))' },
+  { leading = '{mod}::{impl}::', query = '(item_mod (ident) @mod (item_impl (ident) @impl (item_fn (ident) @symbol)))' },
+  { leading = '{mod}::{trait}::', query = '(item_mod (ident) @mod (item_trait (ident) @trait (item_fn (ident) @symbol)))' },
+  { leading = '{impl}::', query = '(item_impl (ident) @impl (item_fn (ident) @symbol))' },
+  { leading = '{trait}::', query = '(item_trait (ident) @trait (item_fn (ident) @symbol))' },
+]
