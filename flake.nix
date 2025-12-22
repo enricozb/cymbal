@@ -7,8 +7,16 @@
     inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = { self, nixpkgs, flake-utils, fenix, ... }:
-    flake-utils.lib.eachDefaultSystem (system:
+  outputs =
+    {
+      self,
+      nixpkgs,
+      flake-utils,
+      fenix,
+      ...
+    }:
+    flake-utils.lib.eachDefaultSystem (
+      system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
         rust-toolchain = fenix.packages.${system}.fromToolchainFile {
@@ -19,8 +27,16 @@
           cargo = rust-toolchain;
           rustc = rust-toolchain;
         };
-      in {
-        devShells.default = pkgs.mkShell { packages = [ rust-toolchain pkgs.cargo-flamegraph ]; };
+      in
+      {
+        devShells.default = pkgs.mkShell {
+          packages = [
+            rust-toolchain
+            pkgs.cargo-flamegraph
+            pkgs.tree-sitter
+            pkgs.nodejs_24
+          ];
+        };
 
         packages.default = rust-platform.buildRustPackage {
           pname = "cymbal";
@@ -35,5 +51,8 @@
             };
           };
         };
-      });
+
+        formatter = pkgs.nixfmt-tree;
+      }
+    );
 }
