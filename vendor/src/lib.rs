@@ -5,6 +5,7 @@ unsafe extern "C" {
 }
 
 pub mod vine {
+  #[must_use]
   pub fn language() -> tree_sitter::Language {
     unsafe { crate::tree_sitter_vine() }
   }
