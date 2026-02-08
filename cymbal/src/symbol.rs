@@ -54,6 +54,8 @@ pub enum Kind {
   Function,
   Method,
   Impl,
+
+  Variant,
 }
 
 impl Kind {
@@ -63,25 +65,27 @@ impl Kind {
     // symbols.
     // Note: these strings must all have the same printable length.
     match self {
-      Self::Module    => color!("mod   ", yellow),
-      Self::Macro     => color!("macro ", yellow),
-      Self::Global    => color!("global", yellow),
-      Self::Constant  => color!("const ", yellow),
-      Self::Define    => color!("define", yellow),
+      Self::Module    => color!("module ", yellow),
+      Self::Macro     => color!("macro  ", yellow),
+      Self::Global    => color!("global ", yellow),
+      Self::Constant  => color!("const  ", yellow),
+      Self::Define    => color!("define ", yellow),
 
-      Self::Class     => color!("class ", cyan),
-      Self::Struct    => color!("struct", cyan),
-      Self::Enum      => color!("enum  ", cyan),
-      Self::Union     => color!("union ", cyan),
+      Self::Class     => color!("class  ", cyan),
+      Self::Struct    => color!("struct ", cyan),
+      Self::Enum      => color!("enum   ", cyan),
+      Self::Union     => color!("union  ", cyan),
 
-      Self::Alias     => color!("alias ", blue),
-      Self::Interface => color!("inter ", blue),
-      Self::Trait     => color!("trait ", blue),
-      Self::Type      => color!("type  ", blue),
+      Self::Alias     => color!("alias  ", blue),
+      Self::Interface => color!("inter  ", blue),
+      Self::Trait     => color!("trait  ", blue),
+      Self::Type      => color!("type   ", blue),
 
-      Self::Function  => color!("func  ", magenta),
-      Self::Method    => color!("method", magenta),
-      Self::Impl      => color!("impl  ", magenta),
+      Self::Function  => color!("func   ", magenta),
+      Self::Method    => color!("method ", magenta),
+      Self::Impl      => color!("impl   ", magenta),
+
+      Self::Variant   => color!("variant", green),
     }
   }
 }
