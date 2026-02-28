@@ -136,6 +136,10 @@
         "named": true
       },
       {
+        "type": "expr_safe",
+        "named": true
+      },
+      {
         "type": "expr_sign",
         "named": true
       },
@@ -171,6 +175,10 @@
       },
       {
         "type": "impl_paren",
+        "named": true
+      },
+      {
+        "type": "impl_safe",
         "named": true
       },
       {
@@ -220,6 +228,10 @@
         "named": true
       },
       {
+        "type": "pat_safe",
+        "named": true
+      },
+      {
         "type": "pat_tuple",
         "named": true
       }
@@ -253,6 +265,10 @@
       },
       {
         "type": "ty_hole",
+        "named": true
+      },
+      {
+        "type": "ty_if_const",
         "named": true
       },
       {
@@ -377,6 +393,10 @@
           "named": true
         },
         {
+          "type": "stmt_assert",
+          "named": true
+        },
+        {
           "type": "stmt_empty",
           "named": true
         },
@@ -471,6 +491,21 @@
       "types": [
         {
           "type": "ident",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "chain_index",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "_expr",
           "named": true
         }
       ]
@@ -663,6 +698,10 @@
         },
         {
           "type": "chain_field",
+          "named": true
+        },
+        {
+          "type": "chain_index",
           "named": true
         },
         {
@@ -1138,6 +1177,21 @@
     }
   },
   {
+    "type": "expr_safe",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "_expr",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "expr_sign",
     "named": true,
     "fields": {},
@@ -1320,6 +1374,21 @@
       "types": [
         {
           "type": "path",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "impl_safe",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "_impl",
           "named": true
         }
       ]
@@ -1511,7 +1580,7 @@
     "fields": {},
     "children": {
       "multiple": true,
-      "required": true,
+      "required": false,
       "types": [
         {
           "type": "attr",
@@ -1901,6 +1970,21 @@
     }
   },
   {
+    "type": "pat_safe",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "_pat",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "pat_tuple",
     "named": true,
     "fields": {},
@@ -2023,6 +2107,10 @@
           "named": true
         },
         {
+          "type": "stmt_assert",
+          "named": true
+        },
+        {
           "type": "stmt_empty",
           "named": true
         },
@@ -2036,6 +2124,25 @@
         },
         {
           "type": "stmt_let_fn",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "stmt_assert",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "_expr",
+          "named": true
+        },
+        {
+          "type": "block",
           "named": true
         }
       ]
@@ -2075,14 +2182,6 @@
         },
         {
           "type": "_pat",
-          "named": true
-        },
-        {
-          "type": "block",
-          "named": true
-        },
-        {
-          "type": "match_arm",
           "named": true
         }
       ]
@@ -2195,6 +2294,25 @@
     "type": "ty_hole",
     "named": true,
     "fields": {}
+  },
+  {
+    "type": "ty_if_const",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "_ty",
+          "named": true
+        },
+        {
+          "type": "path",
+          "named": true
+        }
+      ]
+    }
   },
   {
     "type": "ty_inverse",
@@ -2551,6 +2669,10 @@
     "named": false
   },
   {
+    "type": "assert",
+    "named": false
+  },
+  {
     "type": "break",
     "named": false
   },
@@ -2651,6 +2773,10 @@
     "named": false
   },
   {
+    "type": "safe",
+    "named": false
+  },
+  {
     "type": "string_content",
     "named": true
   },
@@ -2676,6 +2802,10 @@
   },
   {
     "type": "type",
+    "named": false
+  },
+  {
+    "type": "unsafe",
     "named": false
   },
   {

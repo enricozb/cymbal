@@ -110,6 +110,7 @@ module.exports = grammar({
       "impl",
       "match",
       "let",
+      "assert",
       "const",
       "in",
       "is",
@@ -128,7 +129,10 @@ module.exports = grammar({
       "and",
       "or",
       "try",
+      "unsafe",
+      "safe",
     ],
+    none: _ => [],
   },
 
   rules: {
@@ -183,6 +187,7 @@ module.exports = grammar({
       seq(
         repeat($.attr),
         optional($.vis),
+        optional("unsafe"),
         "fn",
         optional("."),
         $.ident,
@@ -198,6 +203,7 @@ module.exports = grammar({
       prec.right(seq(
         repeat($.attr),
         optional($.vis),
+        optional("unsafe"),
         "const",
         $.ident,
         optional($.generic_params),
@@ -224,6 +230,7 @@ module.exports = grammar({
       seq(
         repeat($.attr),
         optional($.vis),
+        optional("unsafe"),
         "enum",
         optional($.flex),
         $.ident,
@@ -248,11 +255,16 @@ module.exports = grammar({
         repeat($.attr),
         optional($.vis),
         "mod",
-        $.ident,
-        optional($.generic_params),
         choice(
-          seq(optional(seq("=", $.string)), optional(";")),
-          delimited("{", "", "}", $._item),
+          seq(
+            $.ident,
+            optional($.generic_params),
+            choice(
+              seq(optional(seq("=", $.string)), optional(";")),
+              delimited("{", "", "}", $._item),
+            ),
+          ),
+          optional(";"),
         ),
       )),
 
@@ -260,6 +272,7 @@ module.exports = grammar({
       seq(
         repeat($.attr),
         optional($.vis),
+        optional("unsafe"),
         "trait",
         $.ident,
         optional($.generic_params),
@@ -270,8 +283,9 @@ module.exports = grammar({
       prec.right(seq(
         repeat($.attr),
         optional($.vis),
+        optional("unsafe"),
         "impl",
-        $.ident,
+        optional($.ident),
         optional($.generic_params),
         ":",
         $._trait,
@@ -314,7 +328,14 @@ module.exports = grammar({
     vis: $ => seq("pub", optional(seq(".", $.ident))),
 
     attr: $ =>
-      seq("#[", $.ident, optional(choice(seq("=", $.string), seq("(", $._expr, ")"))), "]"),
+      seq(
+        "#[",
+        optional("safe"),
+        // @ts-ignore
+        reserved("none", $.ident),
+        optional(choice(seq("=", $.string), seq("(", $._expr, ")"))),
+        "]",
+      ),
 
     generic_params: $ => generics(true, $.ty_param, $.impl_param),
     ty_param: $ => seq($.ident, optional($.flex)),
@@ -343,6 +364,7 @@ module.exports = grammar({
           ),
         ),
         $.stmt_expr,
+        $.stmt_assert,
         $.stmt_let,
         $.stmt_let_fn,
       ),
@@ -351,17 +373,22 @@ module.exports = grammar({
 
     stmt_expr: $ => prec.right(seq($._expr, optional(";"))),
 
+    stmt_assert: $ =>
+      prec.right(seq(
+        "assert",
+        $._expr,
+        "else",
+        $.block,
+      )),
+
     stmt_let: $ =>
       prec.right(seq(
         "let",
+        optional("loop"),
         $._pat,
         optional(seq(
           "=",
           $._expr,
-          optional(choice(
-            seq("else", $.block),
-            seq("else", "match", delimited("{", "", "}", $.match_arm)),
-          )),
         )),
         optional(";"),
       )),
@@ -384,6 +411,7 @@ module.exports = grammar({
         "...",
         $.expr_hole,
         $.expr_paren,
+        $.expr_safe,
         $.expr_path,
         $.expr_do,
         $.expr_assign,
@@ -427,6 +455,8 @@ module.exports = grammar({
 
     expr_paren: $ => seq("(", $._expr, ")"),
 
+    expr_safe: $ => seq("safe", $._expr),
+
     expr_path: $ => prec.right(seq($.path, optional($.exprs))),
 
     expr_do: $ => seq("do", optional($._label), optional($.block_ty), $.block),
@@ -436,7 +466,8 @@ module.exports = grammar({
     expr_match: $ => seq("match", $._expr, delimited("{", "", "}", $.match_arm)),
     match_arm: $ => seq($._pat, $.block),
 
-    expr_if: $ => prec.right(seq("if", $._expr, $.block, optional(seq("else", $.block)))),
+    expr_if: $ =>
+      prec.right(seq("if", optional("const"), $._expr, $.block, optional(seq("else", $.block)))),
 
     expr_when: $ => seq("when", optional($._label), delimited("{", "", "}", $.when_arm)),
     when_arm: $ => seq($._expr, $.block),
@@ -571,6 +602,7 @@ module.exports = grammar({
         $.chain_deref,
         $.chain_inverse,
         $.chain_as,
+        $.chain_index,
       ),
 
     chain_unwrap: $ => "!",
@@ -582,6 +614,7 @@ module.exports = grammar({
     chain_deref: $ => seq(".", "*"),
     chain_inverse: $ => seq(".", "~"),
     chain_as: $ => seq(".", "as", "[", $._ty, "]"),
+    chain_index: $ => seq(".", "[", $._expr, "]"),
 
     string: $ =>
       seq(
@@ -606,6 +639,7 @@ module.exports = grammar({
         "...",
         $.pat_hole,
         $.pat_paren,
+        $.pat_safe,
         $.pat_annotation,
         $.pat_path,
         $.pat_ref,
@@ -617,6 +651,7 @@ module.exports = grammar({
 
     pat_hole: $ => "_",
     pat_paren: $ => seq("(", $._pat, ")"),
+    pat_safe: $ => seq("safe", $._pat),
     pat_annotation: $ => prec(BP.Annotation, seq($._pat, ":", $._ty)),
     pat_path: $ => prec.right(seq($.path, optional($.pats))),
     pat_ref: $ => prec(BP.Prefix, seq("&", $._pat)),
@@ -638,7 +673,7 @@ module.exports = grammar({
 
     path: $ =>
       prec.right(
-        seq(optional("::"), $.ident, repeat(seq("::", $.ident)), optional($.generic_args)),
+        seq(optional("#"), $.ident, repeat(seq("::", $.ident)), optional($.generic_args)),
       ),
 
     _ty: $ =>
@@ -653,6 +688,7 @@ module.exports = grammar({
         $.ty_ref,
         $.ty_inverse,
         $.ty_path,
+        $.ty_if_const,
       ),
 
     ty_hole: $ => "_",
@@ -665,16 +701,22 @@ module.exports = grammar({
     ty_ref: $ => seq("&", $._ty),
     ty_inverse: $ => seq("~", $._ty),
     ty_path: $ => $.path,
+    ty_if_const: $ =>
+      prec.right(
+        seq("if", "const", $.path, "{", $._ty, "}", optional(seq("else", "{", $._ty, "}"))),
+      ),
 
     _impl: $ =>
       choice(
         $.impl_hole,
         $.impl_paren,
+        $.impl_safe,
         $.impl_fn,
         $.path,
       ),
     impl_hole: $ => "_",
     impl_paren: $ => seq("(", $.path, ")"),
+    impl_safe: $ => seq("safe", $._impl),
     impl_fn: $ => seq("fn", $.path),
 
     _trait: $ =>
