@@ -2,10 +2,7 @@
   description = "lists symbols (types, classes, etc.) in a codebase";
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
   inputs.flake-utils.url = "github:numtide/flake-utils";
-  inputs.crane = {
-    url = "github:ipetkov/crane";
-    inputs.nixpkgs.follows = "nixpkgs";
-  };
+  inputs.crane.url = "github:ipetkov/crane";
   inputs.fenix = {
     url = "github:nix-community/fenix/monthly";
     inputs.nixpkgs.follows = "nixpkgs";
@@ -29,6 +26,10 @@
           sha256 = "sha256-tqagmXrHoZA9Zmu2Br6n3MzvXaLkuPzKPS3NIVdNQVQ=";
         };
         craneLib = (crane.mkLib pkgs).overrideToolchain (_: rust-toolchain);
+        cymbalSrc = nixpkgs.lib.cleanSourceWith {
+          src = ./.;
+          filter = path: type: (craneLib.filterCargoSources path type) || (nixpkgs.lib.hasSuffix ".js" path);
+        };
       in
       {
         packages.default =
@@ -37,8 +38,11 @@
           in
           craneLib.buildPackage {
             inherit (cargo-toml) pname version;
-            src = ./.;
-            strictDeps = true;
+            nativeBuildInputs = [
+              pkgs.nodejs_24
+              pkgs.tree-sitter
+            ];
+            src = cymbalSrc;
           };
 
         devShells.default = craneLib.devShell {

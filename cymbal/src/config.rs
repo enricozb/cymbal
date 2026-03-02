@@ -80,31 +80,41 @@ impl Query {
 
 macro_rules! Language {
   (
-    $( { $display_name:literal, $name:ident, $color:ident, [$($ext:literal),*], $ts:expr } ),* $(,)?
+    $( { $display_name:literal, $name:ident, $color:ident, [$($ext:literal),*], $ts:expr $(, $meta:meta)? } ),* $(,)?
   ) => {
     #[repr(u8)]
     #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq, Hash, SqlxType, ValueEnum)]
     #[serde(rename_all = "lowercase")]
     pub enum Language {
-      $( $name, )*
+      $(
+        $(#[$meta])*
+        $name,
+      )*
     }
 
     impl Language {
       pub fn as_tree_sitter(self) -> TreeSitterLanguage {
         match self {
-          $( Self::$name => $ts, )*
+          $(
+            $(#[$meta])*
+            Self::$name => $ts,
+          )*
         }
       }
 
       pub fn colored_abbreviation(self) -> &'static str {
         match self {
-          $( Self::$name => color!($display_name, $color), )*
+          $(
+            $(#[$meta])*
+            Self::$name => color!($display_name, $color),
+          )*
         }
       }
 
       pub fn from_extension<S: AsRef<str>>(extension: S) -> Option<Self> {
         match extension.as_ref() {
           $(
+            $(#[$meta])*
             $( $ext => Some(Self::$name), )*
           )*
           _ => None,
@@ -117,7 +127,10 @@ macro_rules! Language {
     }
 
     const _: () = {
-      $(assert!($display_name.len() == 4);)*
+      $(
+        $(#[$meta])*
+        assert!($display_name.len() == 4);
+      )*
     };
   };
 }
@@ -134,7 +147,7 @@ Language! {
   { "py  ", Python, bright_yellow, ["py"], tree_sitter_python::LANGUAGE.into() },
   { "rs  ", Rust, yellow, ["rs"], tree_sitter_rust::LANGUAGE.into() },
   { "ts  ", TypeScript, blue, ["js", "jsx", "ts", "tsx"], tree_sitter_typescript::LANGUAGE_TSX.into() },
-  { "vine", Vine, green, ["vi"], vendor::vine::language() },
+  { "vine", Vine, green, ["vi"], vendor::vine::language(), cfg(feature = "vendor") },
 }
 
 #[cfg(test)]
