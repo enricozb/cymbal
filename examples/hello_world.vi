@@ -1,3 +1,0 @@
-pub fn vine_fn(&io: &IO) {
-  io.println("Hello, world!");
-}
