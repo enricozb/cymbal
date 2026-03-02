@@ -8,9 +8,7 @@
       "scope": "source.vine",
       "file-types": ["vi"],
       "injection-regex": "^vine$",
-      "class-name": "TreeSitterVine",
-      "highlights": ["queries/highlights.scm"],
-      "injections": ["queries/injections.scm"]
+      "class-name": "TreeSitterVine"
     }
   ],
   "metadata": {
