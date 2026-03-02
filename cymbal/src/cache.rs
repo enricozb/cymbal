@@ -117,6 +117,7 @@ impl Cache {
       .context("failed to set is_fully_parsed for file info")
   }
 
+  #[allow(deprecated)]
   pub fn get_symbols<'a, 'path>(&'a self, file_path: &'path Path) -> impl Stream<Item = Result<Symbol, sqlx::Error>> + 'path
   where
     'a: 'path,
@@ -152,6 +153,7 @@ impl Cache {
     ().ok()
   }
 
+  #[allow(deprecated)]
   fn get_file_paths(&self) -> impl Stream<Item = PathBuf> {
     sqlx::query_as::<Sqlite, RawPath>("SELECT path FROM file")
       .fetch_many(&self.pool)
