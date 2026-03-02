@@ -1,7 +1,11 @@
 {
-  description = "symbols";
+  description = "lists symbols (types, classes, etc.) in a codebase";
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
   inputs.flake-utils.url = "github:numtide/flake-utils";
+  inputs.crane = {
+    url = "github:ipetkov/crane";
+    inputs.nixpkgs.follows = "nixpkgs";
+  };
   inputs.fenix = {
     url = "github:nix-community/fenix/monthly";
     inputs.nixpkgs.follows = "nixpkgs";
@@ -12,6 +16,7 @@
       self,
       nixpkgs,
       flake-utils,
+      crane,
       fenix,
       ...
     }:
@@ -23,33 +28,25 @@
           file = ./rust-toolchain.toml;
           sha256 = "sha256-tqagmXrHoZA9Zmu2Br6n3MzvXaLkuPzKPS3NIVdNQVQ=";
         };
-        rust-platform = pkgs.makeRustPlatform {
-          cargo = rust-toolchain;
-          rustc = rust-toolchain;
-        };
+        craneLib = (crane.mkLib pkgs).overrideToolchain (_: rust-toolchain);
       in
       {
-        devShells.default = pkgs.mkShell {
-          packages = [
-            rust-toolchain
-            pkgs.cargo-flamegraph
-            pkgs.tree-sitter
-            pkgs.nodejs_24
-          ];
-        };
-
-        packages.default = rust-platform.buildRustPackage {
-          pname = "cymbal";
-          version = "0.10.1";
-
-          src = ./.;
-
-          cargoLock = {
-            lockFile = ./Cargo.lock;
-            outputHashes = {
-              "tree-sitter-fish-3.5.1" = "sha256-ED1lJ1GlbT/ptr+S9J1mD9fnfuewPko2rvj/qMVPCso=";
-            };
+        packages.default =
+          let
+            cargo-toml = craneLib.crateNameFromCargoToml { cargoToml = ./cymbal/Cargo.toml; };
+          in
+          craneLib.buildPackage {
+            inherit (cargo-toml) pname version;
+            src = ./.;
+            strictDeps = true;
           };
+
+        devShells.default = craneLib.devShell {
+          packages = [
+            pkgs.cargo-expand
+            pkgs.nodejs_24
+            pkgs.tree-sitter
+          ];
         };
 
         formatter = pkgs.nixfmt-tree;

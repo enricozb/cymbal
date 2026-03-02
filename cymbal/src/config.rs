@@ -115,10 +115,13 @@ macro_rules! Language {
         Self::from_extension(file_path.as_ref().extension()?.to_str()?)
       }
     }
+
+    const _: () = {
+      $(assert!($display_name.len() == 4);)*
+    };
   };
 }
 
-// TODO(enricozb): compile-time assert that language names are at most 4 chars.
 Language! {
   { "c   ", C, blue, ["c", "h"], tree_sitter_c::LANGUAGE.into() },
   { "c++ ", Cpp, blue, ["cpp", "cc", "hh"], tree_sitter_cpp::LANGUAGE.into() },
