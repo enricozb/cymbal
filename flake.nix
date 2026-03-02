@@ -26,10 +26,19 @@
           sha256 = "sha256-tqagmXrHoZA9Zmu2Br6n3MzvXaLkuPzKPS3NIVdNQVQ=";
         };
         craneLib = (crane.mkLib pkgs).overrideToolchain (_: rust-toolchain);
-        cymbalSrc = nixpkgs.lib.cleanSourceWith {
-          src = ./.;
-          filter = path: type: (craneLib.filterCargoSources path type) || (nixpkgs.lib.hasSuffix ".js" path);
-        };
+        cymbalSrc =
+          let
+            extraFilter =
+              path:
+              nixpkgs.lib.any (suffix: nixpkgs.lib.hasSuffix suffix path) [
+                ".js"
+                ".sql"
+              ];
+          in
+          nixpkgs.lib.cleanSourceWith {
+            src = ./.;
+            filter = path: type: (craneLib.filterCargoSources path type) || (extraFilter path);
+          };
       in
       {
         packages.default =
