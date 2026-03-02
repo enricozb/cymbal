@@ -4,3 +4,6 @@
 # nix
 /.direnv/
 /.envrc
+
+# tree-sitter
+vendor/grammars/*/src
