@@ -1,11 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["cymbal", "vendor"]
-
-[workspace.dependencies]
-tree-sitter = "0.25.10"
-
-vendor = { path = "vendor" }
+members = ["cymbal"]
 
 [workspace.lints.clippy]
 pedantic = { level = "deny" }

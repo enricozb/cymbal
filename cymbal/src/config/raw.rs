@@ -40,7 +40,7 @@ impl RawConfig {
         (
           language,
           Lazy::new(Box::new(move || {
-            let ts_language = language.as_tree_sitter();
+            let ts_language = language.as_tree_sitter_language();
 
             language_config
               .queries

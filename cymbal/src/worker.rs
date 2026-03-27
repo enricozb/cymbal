@@ -97,8 +97,8 @@ impl Worker {
   fn print_symbol(&self, file_path: &Path, symbol: &Symbol) {
     print!(
       "{lang}{dlm}{kind}{dlm}{path}{dlm}{line}{dlm}{col}{dlm}{lead}{dlm}{text}{dlm}{trail}{end}",
-      lang = symbol.language.colored_abbreviation(),
-      kind = symbol.kind.colored_abbreviation(),
+      lang = symbol.language.colored(),
+      kind = symbol.kind.colored(),
       path = file_path.display(),
       line = symbol.line,
       col = symbol.column,

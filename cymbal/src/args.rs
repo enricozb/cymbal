@@ -138,6 +138,6 @@ impl Args {
   }
 
   fn language(&self) -> Option<Language> {
-    self.language.or(self.extension.as_ref().and_then(Language::from_extension))
+    self.language.or(self.extension.as_deref().and_then(Language::from_extension))
   }
 }

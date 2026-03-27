@@ -60,7 +60,7 @@ pub enum Kind {
 
 impl Kind {
   #[rustfmt::skip]
-  pub fn colored_abbreviation(self) -> &'static str {
+  pub fn colored(self) -> &'static str {
     // TODO(enricozb): have some macro generate this to automatically pad all
     // symbols.
     // Note: these strings must all have the same printable length.

@@ -4,10 +4,11 @@ use std::{collections::HashMap, path::Path};
 
 use anyhow::Result;
 use clap::ValueEnum;
+use enum_assoc::Assoc;
 use indexmap::IndexMap;
 use serde::Deserialize;
 use sqlx::Type as SqlxType;
-use tree_sitter::{Language as TreeSitterLanguage, Query as TreeSitterQuery};
+use tree_sitter::Query as TreeSitterQuery;
 
 use crate::{
   color,
@@ -17,6 +18,8 @@ use crate::{
   template::Template,
   utils::Lazy,
 };
+
+include!(concat!(env!("OUT_DIR"), "/", "grammars.rs"));
 
 static DEFAULT_CONFIG: &str = include_str!("../default-config.toml");
 
@@ -78,76 +81,51 @@ impl Query {
   }
 }
 
-macro_rules! Language {
-  (
-    $( { $display_name:literal, $name:ident, $color:ident, [$($ext:literal),*], $ts:expr $(, $meta:meta)? } ),* $(,)?
-  ) => {
-    #[repr(u8)]
-    #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq, Hash, SqlxType, ValueEnum)]
-    #[serde(rename_all = "lowercase")]
-    pub enum Language {
-      $(
-        $(#[$meta])*
-        $name,
-      )*
-    }
-
-    impl Language {
-      pub fn as_tree_sitter(self) -> TreeSitterLanguage {
-        match self {
-          $(
-            $(#[$meta])*
-            Self::$name => $ts,
-          )*
-        }
-      }
-
-      pub fn colored_abbreviation(self) -> &'static str {
-        match self {
-          $(
-            $(#[$meta])*
-            Self::$name => color!($display_name, $color),
-          )*
-        }
-      }
-
-      pub fn from_extension<S: AsRef<str>>(extension: S) -> Option<Self> {
-        match extension.as_ref() {
-          $(
-            $(#[$meta])*
-            $( $ext => Some(Self::$name), )*
-          )*
-          _ => None,
-        }
-      }
-
-      pub fn from_file_path<P: AsRef<Path>>(file_path: P) -> Option<Self> {
-        Self::from_extension(file_path.as_ref().extension()?.to_str()?)
-      }
-    }
-
-    const _: () = {
-      $(
-        $(#[$meta])*
-        assert!($display_name.len() == 4);
-      )*
-    };
-  };
+#[derive(Assoc, Clone, Copy, Debug, Deserialize, PartialEq, Eq, Hash, SqlxType, ValueEnum)]
+#[serde(rename_all = "lowercase")]
+#[func(pub fn from_extension(s: &str) -> Option<Self>)]
+#[func(pub const fn colored(&self) -> &'static str)]
+pub enum Language {
+  #[assoc(colored = color!("c   ", blue), from_extension = "c" | "h")]
+  C,
+  #[assoc(colored = color!("c++ ", blue), from_extension = "cpp" | "cc" | "hh")]
+  CPP,
+  #[assoc(colored = color!("fish", green), from_extension = "fish")]
+  Fish,
+  #[assoc(colored = color!("go  ", cyan), from_extension = "go")]
+  Go,
+  #[assoc(colored = color!("hs  ", magenta), from_extension = "hs")]
+  Haskell,
+  #[assoc(colored = color!("json", green), from_extension = "json")]
+  JSON,
+  #[assoc(colored = color!("flow", yellow), from_extension = "ml")]
+  OCaml,
+  #[assoc(colored = color!("odin", blue), from_extension = "odin")]
+  Odin,
+  #[assoc(colored = color!("py  ", bright_yellow), from_extension = "py")]
+  Python,
+  #[assoc(colored = color!("rs  ", yellow), from_extension = "rs")]
+  Rust,
+  #[assoc(colored = color!("ts  ", blue), from_extension = "js" | "jsx")]
+  JavaScript,
+  #[assoc(colored = color!("ts  ", blue), from_extension = "ts")]
+  TypeScript,
+  #[assoc(colored = color!("tsx ", blue), from_extension = "tsx")]
+  TSX,
+  #[assoc(colored = color!("ivy ", green), from_extension = "iv")]
+  Ivy,
+  #[assoc(colored = color!("vine", green), from_extension = "vi")]
+  Vine,
+  #[assoc(colored = color!("kak ", green), from_extension = "kak")]
+  Kak,
 }
 
-Language! {
-  { "c   ", C, blue, ["c", "h"], tree_sitter_c::LANGUAGE.into() },
-  { "c++ ", Cpp, blue, ["cpp", "cc", "hh"], tree_sitter_cpp::LANGUAGE.into() },
-  { "fish", Fish, green, ["fish"], tree_sitter_fish::language() },
-  { "go  ", Go, cyan, ["go"], tree_sitter_go::LANGUAGE.into() },
-  { "hs  ", Haskell, magenta, ["hs"], tree_sitter_haskell::LANGUAGE.into() },
-  { "json", Json, green, ["json"], tree_sitter_json::LANGUAGE.into() },
-  { "ml  ", Ocaml, yellow, ["ml"], tree_sitter_ocaml::LANGUAGE_OCAML.into() },
-  { "odin", Odin, blue, ["odin"], tree_sitter_odin::LANGUAGE.into() },
-  { "py  ", Python, bright_yellow, ["py"], tree_sitter_python::LANGUAGE.into() },
-  { "rs  ", Rust, yellow, ["rs"], tree_sitter_rust::LANGUAGE.into() },
-  { "ts  ", TypeScript, blue, ["js", "jsx", "ts", "tsx"], tree_sitter_typescript::LANGUAGE_TSX.into() },
-  { "vine", Vine, green, ["vi"], vendor::vine::language(), cfg(feature = "vendor") },
+languages_impl!(Language);
+
+impl Language {
+  pub fn from_file_path<P: AsRef<Path>>(file_path: P) -> Option<Self> {
+    Self::from_extension(file_path.as_ref().extension()?.to_str()?)
+  }
 }
 
 #[cfg(test)]
