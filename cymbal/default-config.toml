@@ -29,6 +29,12 @@ method = [
 alias = '(command name: _ @command (#eq? @command "alias") . argument: _ @symbol)'
 function = '(function_definition name: _ @symbol)'
 
+[kak]
+function = '(define_command name: _ @symbol)'
+hook = '(hook_definition name: _ @symbol)'
+module = '(provide_module name: _ @symbol)'
+mode = '(declare_user_mode name: _ @symbol)'
+
 [ocaml]
 function = [
   '''

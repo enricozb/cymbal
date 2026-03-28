@@ -56,6 +56,9 @@ pub enum Kind {
   Impl,
 
   Variant,
+
+  Mode,
+  Hook,
 }
 
 impl Kind {
@@ -86,6 +89,9 @@ impl Kind {
       Self::Impl      => color!("impl   ", magenta),
 
       Self::Variant   => color!("variant", green),
+
+      Self::Mode      => color!("mode   ", blue),
+      Self::Hook      => color!("hook   ", green),
     }
   }
 }
