@@ -35,6 +35,12 @@ hook = '(hook_definition name: _ @symbol)'
 module = '(provide_module name: _ @symbol)'
 mode = '(declare_user_mode name: _ @symbol)'
 
+[nu]
+function = [
+  '(decl_def unquoted_name: _ @symbol)',
+  '(decl_def quoted_name: (val_string (string_content) @symbol))',
+]
+
 [ocaml]
 function = [
   '''

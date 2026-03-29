@@ -118,6 +118,8 @@ pub enum Language {
   Vine,
   #[assoc(colored = color!("kak ", green), from_extension = "kak")]
   Kak,
+  #[assoc(colored = color!("nu  ", blue), from_extension = "nu")]
+  Nu,
 }
 
 languages_impl!(Language);

@@ -118,6 +118,7 @@
         "tree-sitter-javascript": "tree-sitter-javascript",
         "tree-sitter-json": "tree-sitter-json",
         "tree-sitter-kak": "tree-sitter-kak",
+        "tree-sitter-nu": "tree-sitter-nu",
         "tree-sitter-ocaml": "tree-sitter-ocaml",
         "tree-sitter-odin": "tree-sitter-odin",
         "tree-sitter-python": "tree-sitter-python",
@@ -336,6 +337,22 @@
       "original": {
         "owner": "saifulapm",
         "repo": "tree-sitter-kakscript",
+        "type": "github"
+      }
+    },
+    "tree-sitter-nu": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1774015059,
+        "narHash": "sha256-G+XuQSqvJ9xRNq4fYiyHK9+AmCNofayPOC6JrFXpcjU=",
+        "owner": "nushell",
+        "repo": "tree-sitter-nu",
+        "rev": "696d257f6b652edb50878a783b30ad7833dec49e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nushell",
+        "repo": "tree-sitter-nu",
         "type": "github"
       }
     },
