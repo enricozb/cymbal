@@ -179,9 +179,9 @@ struct = '(item_struct (ident) @symbol)'
 trait = '(item_trait (ident) @symbol)'
 type = '(item_type (ident) @symbol)'
 impl = [
-  { leading = '{super}::{mod}::', query = '(item_mod (ident) @super (item_mod (ident) @mod (item_impl [(ident) @symbol (_trait (ident) @symbol)])))' },
-  { leading = '{mod}::', query = '(item_mod (ident) @mod (item_impl [(ident) @symbol (_trait (ident) @symbol)]))' },
-  '(item_impl [(ident) @symbol (_trait (ident) @symbol)])',
+  { leading = '{super}::{mod}::', query = '(item_mod (ident) @super (item_mod (ident) @mod (item_impl (ident)?  @symbol (_trait) @symbol)))' },
+  { leading = '{mod}::', query = '(item_mod (ident) @mod (item_impl (ident)?  @symbol (_trait) @symbol))' },
+  '(item_impl (ident)? @symbol (_trait) @symbol)',
 ]
 constant = [
   { leading = '{super}::{mod}::{impl}::', query = '(item_mod (ident) @super (item_mod (ident) @mod (item_impl (ident) @impl (item_const (ident) @symbol))))' },
