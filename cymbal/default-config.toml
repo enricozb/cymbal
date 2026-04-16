@@ -152,9 +152,12 @@ class = '(class_definition name: (identifier) @symbol)'
 
 [typescript]
 type = '(type_alias_declaration name: _ @symbol)'
-interface = '(interface_declaration name: _ @symbol)'
+interface = [
+  '(interface_declaration name: _ @symbol)',
+  '(method_signature name: (property_identifier) @symbol)',
+]
 class = '(class_declaration name: (type_identifier) @symbol)'
-method = '(method_signature name: (property_identifier) @symbol)'
+method = '(method_definition name: (property_identifier) @symbol)'
 function = [
   '(function_declaration name: (identifier) @symbol)',
   '(program (lexical_declaration (variable_declarator name: (identifier) @symbol value: (arrow_function))))',

@@ -81,8 +81,11 @@ impl Query {
   }
 }
 
+#[allow(clippy::unsafe_derive_deserialize)]
+#[allow(clippy::upper_case_acronyms)]
 #[derive(Assoc, Clone, Copy, Debug, Deserialize, PartialEq, Eq, Hash, SqlxType, ValueEnum)]
 #[serde(rename_all = "lowercase")]
+#[value(rename_all = "lowercase")]
 #[func(pub fn from_extension(s: &str) -> Option<Self>)]
 #[func(pub const fn colored(&self) -> &'static str)]
 pub enum Language {

@@ -115,7 +115,6 @@
             extraFilter =
               path:
               nixpkgs.lib.any (suffix: nixpkgs.lib.hasSuffix suffix path) [
-                ".js"
                 ".sql"
               ];
           in

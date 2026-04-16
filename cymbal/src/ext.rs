@@ -154,7 +154,7 @@ pub impl TreeSitterParser {
     let mut parser = TreeSitterParser::new();
 
     parser
-      .set_language(&&language.as_tree_sitter_language())
+      .set_language(&language.as_tree_sitter_language())
       .context("failed to set tree sitter parser language")?;
 
     parser.ok()
