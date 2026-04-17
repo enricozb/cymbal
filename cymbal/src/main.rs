@@ -36,11 +36,6 @@ async fn main() -> Result<()> {
   let should_clean_cache = !args.is_filtering();
   let walker = Walker::new(args.search_path().to_path_buf(), sender, cache.clone(), should_clean_cache).spawn();
 
-  // TODO:
-  // - don't clean cache when filtering
-  // - dedup symbols at the same start
-  // - tree sitter languages and queries must be shared
-
   let mut workers = JoinSet::new();
   for _ in 0..available_concurrency {
     workers.spawn(Worker::new(cache.clone(), config, receiver.clone(), delimiter, separator).run());
