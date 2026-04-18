@@ -203,6 +203,18 @@ function = []
 method = []
 ```
 
+## Testing
+Snapshot tests live in `cymbal/tests/snapshots.rs`. Each language has a small
+sample source file under `cymbal/tests/languages/` (e.g. `cpp.cpp`, `rust.rs`)
+and a corresponding snapshot under `cymbal/tests/snapshots/` (e.g.
+`cpp.cpp.snap`).
+
+The test harness discovers all files in `cymbal/tests/languages/` automatically.
+
+- `cargo test`: verifies that the current output matches every snapshot.
+- `UPDATE_SNAPSHOTS=1 cargo test`: updates snapshot files.
+
+
 [1]: https://asciinema.org/a/MzqFoRPvOqTztcuUg1PGWnUup
 [2]: https://github.com/junegunn/fzf
 [3]: https://toml.io/en/

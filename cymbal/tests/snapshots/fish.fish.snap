@@ -1,0 +1,6 @@
+[32mfish[0m [34malias  [0m tests/languages/fish.fish 16 6  ll='ls -lah' 
+[32mfish[0m [34malias  [0m tests/languages/fish.fish 17 6  gs='git status' 
+[32mfish[0m [34malias  [0m tests/languages/fish.fish 18 6  gp='git pull' 
+[32mfish[0m [35mfunc   [0m tests/languages/fish.fish 1 9  greet 
+[32mfish[0m [35mfunc   [0m tests/languages/fish.fish 5 9  fish_prompt 
+[32mfish[0m [35mfunc   [0m tests/languages/fish.fish 9 9  backup_file 

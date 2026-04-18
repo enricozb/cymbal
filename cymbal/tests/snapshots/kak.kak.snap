@@ -1,0 +1,4 @@
+[32mkak [0m [35mfunc   [0m tests/languages/kak.kak 20 15  my-command 
+[32mkak [0m [32mhook   [0m tests/languages/kak.kak 25 12  KakBegin 
+[32mkak [0m [33mmodule [0m tests/languages/kak.kak 1 15  my-module 
+[32mkak [0m [34mmode   [0m tests/languages/kak.kak 23 18  my-user-mode 

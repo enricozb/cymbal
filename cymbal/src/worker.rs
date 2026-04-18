@@ -1,6 +1,6 @@
-use std::{collections::HashSet, path::Path};
+use std::{collections::HashSet, io::Write, path::Path};
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use chrono::{DateTime, Utc};
 use futures::{Stream, StreamExt};
 
@@ -13,26 +13,32 @@ use crate::{
   symbol::Symbol,
 };
 
-pub struct Worker {
+pub struct Worker<W: Write> {
   cache: Option<Cache>,
   config: &'static Config,
   receiver: Receiver,
   delimiter: char,
   separator: char,
+  writer: W,
 }
 
-impl Worker {
-  pub fn new(cache: Option<Cache>, config: &'static Config, receiver: Receiver, delimiter: char, separator: char) -> Self {
+impl<W: Write> Worker<W> {
+  pub fn new(cache: Option<Cache>, config: &'static Config, receiver: Receiver, delimiter: char, separator: char, writer: W) -> Self {
     Self {
       cache,
       config,
       receiver,
       delimiter,
       separator,
+      writer,
     }
   }
 
-  async fn process_file_task(&self, file_task: FileTask) -> Result<()> {
+  pub fn into_writer(self) -> W {
+    self.writer
+  }
+
+  async fn process_file_task(&mut self, file_task: FileTask) -> Result<()> {
     let FileTask {
       ref file_path,
       ref file_modified,
@@ -43,35 +49,38 @@ impl Worker {
       return ().ok();
     }
 
-    let Some(cache) = &self.cache else {
+    let Some(cache) = self.cache.take() else {
       let symbol_stream = Parser::new(file_path, language, self.config).symbol_stream().await?;
-      self.emit_symbols(file_path, symbol_stream).await;
+      self.emit_symbols(file_path, symbol_stream).await?;
 
       return ().ok();
     };
 
     if cache.is_file_cached(file_path, file_modified).await? {
       let symbol_stream = cache.get_symbols(file_path).filter_ok();
-      self.emit_symbols(file_path, symbol_stream).await;
 
-      return ().ok();
+      return self.emit_symbols(file_path, symbol_stream).await;
     }
-
     let symbol_stream = Parser::new(file_path, language, self.config).symbol_stream().await?;
+    self.cache_and_emit_symbols(&cache, file_path, file_modified, symbol_stream).await?;
 
-    self.cache_and_emit_symbols(cache, file_path, file_modified, symbol_stream).await
+    self.cache = Some(cache);
+
+    ().ok()
   }
 
-  async fn emit_symbols(&self, file_path: &Path, symbol_stream: impl Stream<Item = Symbol>) {
-    symbol_stream
-      .unique_symbols()
-      .map(|symbol| self.print_symbol(file_path, &symbol))
-      .collect::<()>()
-      .await;
+  pub async fn emit_symbols(&mut self, file_path: &Path, symbol_stream: impl Stream<Item = Symbol>) -> Result<()> {
+    let stream = symbol_stream.unique_symbols();
+    futures::pin_mut!(stream);
+    while let Some(symbol) = stream.next().await {
+      self.write_symbol(file_path, &symbol)?;
+    }
+
+    ().ok()
   }
 
   async fn cache_and_emit_symbols(
-    &self,
+    &mut self,
     cache: &Cache,
     file_path: &Path,
     file_modified: &DateTime<Utc>,
@@ -82,7 +91,7 @@ impl Worker {
     futures::pin_mut!(symbol_stream);
 
     while let Some(symbol) = symbol_stream.next().await {
-      self.print_symbol(file_path, &symbol);
+      self.write_symbol(file_path, &symbol)?;
 
       symbols.push(symbol);
     }
@@ -94,8 +103,9 @@ impl Worker {
     ().ok()
   }
 
-  fn print_symbol(&self, file_path: &Path, symbol: &Symbol) {
-    print!(
+  pub fn write_symbol(&mut self, file_path: &Path, symbol: &Symbol) -> Result<()> {
+    write!(
+      self.writer,
       "{lang}{dlm}{kind}{dlm}{path}{dlm}{line}{dlm}{col}{dlm}{lead}{dlm}{text}{dlm}{trail}{end}",
       lang = symbol.language.colored(),
       kind = symbol.kind.colored(),
@@ -107,10 +117,11 @@ impl Worker {
       trail = symbol.trailing_str(),
       dlm = self.delimiter,
       end = self.separator,
-    );
+    )
+    .context("failed to write symbol")
   }
 
-  pub async fn run(self) -> Result<()> {
+  pub async fn run(mut self) -> Result<()> {
     // TODO(enricozb): try using `self.receiver` as a `Stream`.
     while let Ok(file_task) = self.receiver.recv().await {
       self.process_file_task(file_task).await?;

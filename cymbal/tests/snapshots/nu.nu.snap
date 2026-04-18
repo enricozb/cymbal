@@ -1,0 +1,4 @@
+[34mnu  [0m [35mfunc   [0m tests/languages/nu.nu 1 4  greet 
+[34mnu  [0m [35mfunc   [0m tests/languages/nu.nu 5 4  add 
+[34mnu  [0m [35mfunc   [0m tests/languages/nu.nu 13 4  fibonacci 
+[34mnu  [0m [35mfunc   [0m tests/languages/nu.nu 9 5  str repeat 

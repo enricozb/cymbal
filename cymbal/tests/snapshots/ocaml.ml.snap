@@ -1,0 +1,10 @@
+[33mflow[0m [35mfunc   [0m tests/languages/ocaml.ml 11 4  distance 
+[33mflow[0m [35mfunc   [0m tests/languages/ocaml.ml 16 8  factorial 
+[33mflow[0m [35mfunc   [0m tests/languages/ocaml.ml 19 4  greet 
+[33mflow[0m [35mfunc   [0m tests/languages/ocaml.ml 21 4  map_result 
+[33mflow[0m [34mtype   [0m tests/languages/ocaml.ml 1 5  color 
+[33mflow[0m [34mtype   [0m tests/languages/ocaml.ml 3 5  point 
+[33mflow[0m [34mtype   [0m tests/languages/ocaml.ml 5 8  result 
+[33mflow[0m [34mtype   [0m tests/languages/ocaml.ml 28 10  t 
+[33mflow[0m [33mmodule [0m tests/languages/ocaml.ml 25 7  StringMap 
+[33mflow[0m [34minter  [0m tests/languages/ocaml.ml 27 12  COLLECTION 

@@ -1,0 +1,68 @@
+use ops::{
+  Cast,
+  arithmetic::{Add, Div, Mul, Neg, Pos, Pow, Rem, Sub},
+  bitwise::{BitAnd, BitOr, BitXor, Not, Shl, Shr},
+};
+use util::{duplicate, erase};
+
+/// Natural numbers represented with 32 bits of precision.
+/// ```vi
+/// let x = 12 + 34;
+/// x // 46
+/// ```
+/// `N32` values are always in the range `[0, 2^32) = [0, 4_294_967_296)`.
+#[builtin = "N32"]
+pub type N32;
+
+pub mod N32 {
+  /// The maximum `N32` value, `2^32 - 1`.
+  pub const maximum: N32 = 0xffffffff;
+
+  pub impl : Fork[N32] = safe duplicate;
+  pub impl : Drop[N32] = safe erase;
+
+  pub impl : Default[N32] {
+    const default: N32 = 0[N32];
+  }
+
+  pub impl : Add[N32, N32, N32] {
+    fn add(a: N32, b: N32) -> N32 {
+      safe inline_ivy! (a <- a, b <- b) -> N32 { out a = @n32_add(b out) }
+    }
+  }
+
+  pub impl to_string: Cast[N32, String] {
+    fn cast(n: N32) -> String {
+      if n != 0 {
+        let chars = [];
+        while n != 0 {
+          chars.push_front('0' + n % 10);
+          n /= 10;
+        }
+        String(chars)
+      } else {
+        "0"
+      }
+    }
+  }
+
+  pub fn .to_binary_raw(n: N32) -> String {
+    let chars = [];
+    loop {
+      chars.push_front('0' + (n & 1));
+      n >>= 1;
+      if n != 0 {
+        continue;
+      }
+    }
+    String(chars)
+  }
+
+  pub.numeric fn add_high(a: N32, b: N32) -> Bool {
+    safe inline_ivy! (a <- a, b <- b) -> Bool { out a = @n32_add_high(b out) }
+  }
+
+  pub.numeric fn mul_high(a: N32, b: N32) -> N32 {
+    safe inline_ivy! (a <- a, b <- b) -> N32 { out a = @n32_mul_high(b out) }
+  }
+}

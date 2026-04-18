@@ -1,20 +1,11 @@
 #![feature(lazy_cell_into_inner)]
 
 mod args;
-mod cache;
-mod channel;
-mod color;
-mod config;
-mod ext;
-mod parser;
-mod symbol;
-mod template;
-mod utils;
 mod walker;
-mod worker;
 
 use anyhow::Result;
 use clap::Parser;
+use cymbal::{cache, channel, config, ext, worker};
 use tokio::task::JoinSet;
 
 use crate::{
@@ -38,7 +29,7 @@ async fn main() -> Result<()> {
 
   let mut workers = JoinSet::new();
   for _ in 0..available_concurrency {
-    workers.spawn(Worker::new(cache.clone(), config, receiver.clone(), delimiter, separator).run());
+    workers.spawn(Worker::new(cache.clone(), config, receiver.clone(), delimiter, separator, std::io::stdout()).run());
   }
   workers.join_all().await.ok_all()?;
 

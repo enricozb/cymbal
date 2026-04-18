@@ -1,0 +1,11 @@
+[34mc   [0m [36mstruct [0m tests/languages/c.c 5 15  Point 
+[34mc   [0m [36mstruct [0m tests/languages/c.c 7 7  Point 
+[34mc   [0m [34mtype   [0m tests/languages/c.c 4 21  uint 
+[34mc   [0m [34mtype   [0m tests/languages/c.c 5 21  Point 
+[34mc   [0m [34mtype   [0m tests/languages/c.c 15 2  Complex 
+[34mc   [0m [34mtype   [0m tests/languages/c.c 29 23  Direction 
+[34mc   [0m [35mfunc   [0m tests/languages/c.c 31 7  point_distance 
+[34mc   [0m [35mfunc   [0m tests/languages/c.c 37 8  complex_add 
+[34mc   [0m [35mfunc   [0m tests/languages/c.c 41 4  clamp 
+[34mc   [0m [36menum   [0m tests/languages/c.c 22 5  Direction 
+[34mc   [0m [36menum   [0m tests/languages/c.c 29 13  Direction 

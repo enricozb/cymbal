@@ -1,0 +1,9 @@
+[93mpy  [0m [35mmethod [0m tests/languages/python.py 12 8 Animal. kingdom 
+[93mpy  [0m [35mmethod [0m tests/languages/python.py 5 8 Animal. __init__ 
+[93mpy  [0m [35mmethod [0m tests/languages/python.py 8 8 Animal. speak 
+[93mpy  [0m [35mmethod [0m tests/languages/python.py 17 8 Dog. speak 
+[93mpy  [0m [35mmethod [0m tests/languages/python.py 20 8 Dog. fetch 
+[93mpy  [0m [35mfunc   [0m tests/languages/python.py 24 4  greet 
+[93mpy  [0m [35mfunc   [0m tests/languages/python.py 28 4  fibonacci 
+[93mpy  [0m [36mclass  [0m tests/languages/python.py 4 6  Animal 
+[93mpy  [0m [36mclass  [0m tests/languages/python.py 16 6  Dog 

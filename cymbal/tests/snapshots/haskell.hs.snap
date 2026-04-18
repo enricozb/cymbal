@@ -1,0 +1,8 @@
+[35mhs  [0m [34mtype   [0m tests/languages/haskell.hs 13 5  Name 
+[35mhs  [0m [34mtype   [0m tests/languages/haskell.hs 15 5  Palette 
+[35mhs  [0m [34mtype   [0m tests/languages/haskell.hs 6 5  Shape 
+[35mhs  [0m [34mtype   [0m tests/languages/haskell.hs 11 5  Color 
+[35mhs  [0m [35mfunc   [0m tests/languages/haskell.hs 17 0  area 
+[35mhs  [0m [35mfunc   [0m tests/languages/haskell.hs 24 0  perimeter 
+[35mhs  [0m [35mfunc   [0m tests/languages/haskell.hs 29 0  greet 
+[35mhs  [0m [35mfunc   [0m tests/languages/haskell.hs 32 0  safeHead 

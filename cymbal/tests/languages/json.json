@@ -1,0 +1,15 @@
+{
+  "name": "cymbal",
+  "version": "0.1.0",
+  "description": "list symbols in a codebase",
+  "author": "enricozb",
+  "license": "CC0-1.0",
+  "dependencies": {
+    "tree-sitter": "^0.26.0",
+    "tokio": "^1.0"
+  },
+  "scripts": {
+    "build": "cargo build",
+    "test": "cargo test"
+  }
+}

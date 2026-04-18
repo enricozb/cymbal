@@ -1,0 +1,6 @@
+[34modin[0m [36mstruct [0m tests/languages/odin.odin 6 0  Vec2 
+[34modin[0m [35mmethod [0m tests/languages/odin.odin 17 0  add 
+[34modin[0m [35mmethod [0m tests/languages/odin.odin 21 0  vec2_length 
+[34modin[0m [35mmethod [0m tests/languages/odin.odin 25 0  vec2_add 
+[34modin[0m [35mmethod [0m tests/languages/odin.odin 29 0  main 
+[34modin[0m [33mmodule [0m tests/languages/odin.odin 4 7  math 

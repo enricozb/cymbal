@@ -118,7 +118,7 @@ impl Cache {
   }
 
   #[allow(deprecated)]
-  pub fn get_symbols<'a, 'path>(&'a self, file_path: &'path Path) -> impl Stream<Item = Result<Symbol, sqlx::Error>> + 'path
+  pub fn get_symbols<'a, 'path>(&'a self, file_path: &'path Path) -> impl Stream<Item = Result<Symbol, sqlx::Error>> + use<'path>
   where
     'a: 'path,
   {

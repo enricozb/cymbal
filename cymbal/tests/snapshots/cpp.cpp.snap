@@ -1,0 +1,17 @@
+[34mc++ [0m [34mtype   [0m tests/languages/cpp.cpp 4 21  uint 
+[34mc++ [0m [36mclass  [0m tests/languages/cpp.cpp 6 7  Vec2 
+[34mc++ [0m [36mclass  [0m tests/languages/cpp.cpp 54 9  Edge 
+[34mc++ [0m [36mclass  [0m tests/languages/cpp.cpp 11 6  Shape 
+[34mc++ [0m [36mclass  [0m tests/languages/cpp.cpp 18 6  Circle 
+[34mc++ [0m [36mclass  [0m tests/languages/cpp.cpp 36 6  Rectangle 
+[34mc++ [0m [36mclass  [0m tests/languages/cpp.cpp 52 6  Polygon 
+[34mc++ [0m [35mfunc   [0m tests/languages/cpp.cpp 20 11  Circle 
+[34mc++ [0m [35mfunc   [0m tests/languages/cpp.cpp 38 2  Rectangle 
+[34mc++ [0m [35mfunc   [0m tests/languages/cpp.cpp 46 7  total_area 
+[34mc++ [0m [35mfunc   [0m tests/languages/cpp.cpp 62 11  Polygon 
+[34mc++ [0m [35mmethod [0m tests/languages/cpp.cpp 28 15 Circle:: area 
+[34mc++ [0m [35mmethod [0m tests/languages/cpp.cpp 32 20 Circle:: name 
+[34mc++ [0m [35mmethod [0m tests/languages/cpp.cpp 80 16 Polygon:: area 
+[34mc++ [0m [35mmethod [0m tests/languages/cpp.cpp 84 21 Polygon:: name 
+[34mc++ [0m [35mmethod [0m tests/languages/cpp.cpp 70 22 Polygon::Edge:: length 
+[34mc++ [0m [35mmethod [0m tests/languages/cpp.cpp 76 20 Polygon::Edge:: midpoint 
