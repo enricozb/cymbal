@@ -154,11 +154,16 @@ class = '(class_definition name: (identifier) @symbol)'
 type = '(type_alias_declaration name: _ @symbol)'
 interface = [
   '(interface_declaration name: _ @symbol)',
+  { leading = '{interface}.', query = '(interface_declaration name: (type_identifier) @interface body: (interface_body (method_signature name: (property_identifier) @symbol)))' },
   '(method_signature name: (property_identifier) @symbol)',
 ]
 class = '(class_declaration name: (type_identifier) @symbol)'
-method = '(method_definition name: (property_identifier) @symbol)'
+method = [
+  { leading = '{class}.', query = '(class_declaration name: (type_identifier) @class body: (class_body (method_definition name: (property_identifier) @symbol)))' },
+  '(method_definition name: (property_identifier) @symbol)',
+]
 function = [
+  { leading = '{class}.', query = '(class_declaration name: (type_identifier) @class body: (class_body (public_field_definition name: (property_identifier) @symbol value: (arrow_function))))' },
   '(function_declaration name: (identifier) @symbol)',
   '(program (lexical_declaration (variable_declarator name: (identifier) @symbol value: (arrow_function))))',
   '(program (export_statement (lexical_declaration (variable_declarator name: (identifier) @symbol value: (arrow_function)))))',

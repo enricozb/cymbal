@@ -2,13 +2,13 @@
 [34mts  [0m [34mtype   [0m tests/languages/typescript.ts 3 12  Result 
 [34mts  [0m [34minter  [0m tests/languages/typescript.ts 7 17  Repository 
 [34mts  [0m [34minter  [0m tests/languages/typescript.ts 13 17  User 
-[34mts  [0m [34minter  [0m tests/languages/typescript.ts 8 2  findById 
-[34mts  [0m [34minter  [0m tests/languages/typescript.ts 9 2  save 
-[34mts  [0m [34minter  [0m tests/languages/typescript.ts 10 2  delete 
+[34mts  [0m [34minter  [0m tests/languages/typescript.ts 8 2 Repository. findById 
+[34mts  [0m [34minter  [0m tests/languages/typescript.ts 9 2 Repository. save 
+[34mts  [0m [34minter  [0m tests/languages/typescript.ts 10 2 Repository. delete 
 [34mts  [0m [36mclass  [0m tests/languages/typescript.ts 19 13  UserService 
-[34mts  [0m [35mmethod [0m tests/languages/typescript.ts 20 2  constructor 
-[34mts  [0m [35mmethod [0m tests/languages/typescript.ts 22 8  getUser 
-[34mts  [0m [35mmethod [0m tests/languages/typescript.ts 26 8  createUser 
+[34mts  [0m [35mmethod [0m tests/languages/typescript.ts 20 2 UserService. constructor 
+[34mts  [0m [35mmethod [0m tests/languages/typescript.ts 22 8 UserService. getUser 
+[34mts  [0m [35mmethod [0m tests/languages/typescript.ts 26 8 UserService. createUser 
 [34mts  [0m [35mfunc   [0m tests/languages/typescript.ts 33 16  formatUser 
 [34mts  [0m [35mfunc   [0m tests/languages/typescript.ts 37 6  parseEmail 
 [34mts  [0m [33mconst  [0m tests/languages/typescript.ts 43 13  DEFAULT_PAGE_SIZE 
