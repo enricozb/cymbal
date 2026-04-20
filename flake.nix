@@ -116,6 +116,7 @@
               path:
               nixpkgs.lib.any (suffix: nixpkgs.lib.hasSuffix suffix path) [
                 ".sql"
+                ".snap"
               ];
           in
           nixpkgs.lib.cleanSourceWith {
