@@ -23,8 +23,18 @@ pub union RawVal {
 }
 
 pub trait Shape {
+    type Unit;
+    const DIMENSIONS: u32;
+
     fn area(&self) -> f64;
     fn perimeter(&self) -> f64;
+    fn name(&self) -> &str {
+        "shape"
+    }
+    fn id() -> u64;
+    fn default_id() -> u64 {
+        0
+    }
 }
 
 pub struct Circle {

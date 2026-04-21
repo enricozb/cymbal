@@ -1,5 +1,7 @@
 [33mrs  [0m [33mconst  [0m tests/languages/rust.rs 4 11  GLOBAL_COUNTER 
+[33mrs  [0m [33mconst  [0m tests/languages/rust.rs 27 10 Shape:: DIMENSIONS 
 [33mrs  [0m [33mconst  [0m tests/languages/rust.rs 3 10  MAX_SIZE 
+[33mrs  [0m [34mtype   [0m tests/languages/rust.rs 26 9 Shape:: Unit 
 [33mrs  [0m [34mtype   [0m tests/languages/rust.rs 6 9  Alias 
 [33mrs  [0m [36menum   [0m tests/languages/rust.rs 8 9  Direction 
 [33mrs  [0m [32mvariant[0m tests/languages/rust.rs 9 4 Direction:: North 
@@ -7,15 +9,20 @@
 [33mrs  [0m [32mvariant[0m tests/languages/rust.rs 11 4 Direction:: East 
 [33mrs  [0m [32mvariant[0m tests/languages/rust.rs 12 4 Direction:: West 
 [33mrs  [0m [36mstruct [0m tests/languages/rust.rs 15 11  Point 
-[33mrs  [0m [36mstruct [0m tests/languages/rust.rs 30 11  Circle 
+[33mrs  [0m [36mstruct [0m tests/languages/rust.rs 40 11  Circle 
 [33mrs  [0m [34mtrait  [0m tests/languages/rust.rs 25 10  Shape 
-[33mrs  [0m [35mmethod [0m tests/languages/rust.rs 35 7 Circle:: area 
-[33mrs  [0m [35mmethod [0m tests/languages/rust.rs 39 7 Circle:: perimeter 
-[33mrs  [0m [35mmethod [0m tests/languages/rust.rs 45 11 Circle:: new 
-[33mrs  [0m [35mmethod [0m tests/languages/rust.rs 49 11 Circle:: diameter 
-[33mrs  [0m [35mmethod [0m tests/languages/rust.rs 55 7 Circle:: fmt 
-[33mrs  [0m [35mfunc   [0m tests/languages/rust.rs 60 7  distance 
-[33mrs  [0m [33mmacro  [0m tests/languages/rust.rs 66 13  assert_close 
-[33mrs  [0m [35mimpl   [0m tests/languages/rust.rs 44 5  Circle 
-[33mrs  [0m [35mimpl   [0m tests/languages/rust.rs 34 15 Shape for  Circle 
-[33mrs  [0m [35mimpl   [0m tests/languages/rust.rs 54 22 fmt::Display for  Circle 
+[33mrs  [0m [35mmethod [0m tests/languages/rust.rs 45 7 Circle:: area 
+[33mrs  [0m [35mmethod [0m tests/languages/rust.rs 49 7 Circle:: perimeter 
+[33mrs  [0m [35mmethod [0m tests/languages/rust.rs 55 11 Circle:: new 
+[33mrs  [0m [35mmethod [0m tests/languages/rust.rs 59 11 Circle:: diameter 
+[33mrs  [0m [35mmethod [0m tests/languages/rust.rs 65 7 Circle:: fmt 
+[33mrs  [0m [35mmethod [0m tests/languages/rust.rs 31 7 Shape:: name 
+[33mrs  [0m [35mmethod [0m tests/languages/rust.rs 35 7 Shape:: default_id 
+[33mrs  [0m [35mmethod [0m tests/languages/rust.rs 29 7 Shape:: area 
+[33mrs  [0m [35mmethod [0m tests/languages/rust.rs 30 7 Shape:: perimeter 
+[33mrs  [0m [35mmethod [0m tests/languages/rust.rs 34 7 Shape:: id 
+[33mrs  [0m [35mfunc   [0m tests/languages/rust.rs 70 7  distance 
+[33mrs  [0m [33mmacro  [0m tests/languages/rust.rs 76 13  assert_close 
+[33mrs  [0m [35mimpl   [0m tests/languages/rust.rs 54 5  Circle 
+[33mrs  [0m [35mimpl   [0m tests/languages/rust.rs 44 15 Shape for  Circle 
+[33mrs  [0m [35mimpl   [0m tests/languages/rust.rs 64 22 fmt::Display for  Circle 
