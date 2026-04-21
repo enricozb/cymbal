@@ -159,7 +159,10 @@ class = '(class_definition name: (identifier) @symbol)'
 # const = "variable.other.constant.declaration.go - meta.block.go"
 
 [typescript]
-type = '(type_alias_declaration name: _ @symbol)'
+type = [
+  '(type_alias_declaration name: _ @symbol)',
+  { leading = '{type}.', query = '(type_alias_declaration name: (type_identifier) @type value: (object_type (method_signature name: (property_identifier) @symbol)))' },
+]
 interface = [
   '(interface_declaration name: _ @symbol)',
   { leading = '{interface}.', query = '(interface_declaration name: (type_identifier) @interface body: (interface_body (method_signature name: (property_identifier) @symbol)))' },

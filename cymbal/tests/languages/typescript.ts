@@ -1,5 +1,10 @@
 export type UserId = string;
 
+export type API = {
+  send(message: string): void;
+  receive(): string;
+};
+
 export type Result<T> =
   | { ok: true; value: T }
   | { ok: false; error: string };
