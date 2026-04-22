@@ -54,6 +54,7 @@ pub enum Kind {
   Function,
   Method,
   Impl,
+  Field,
 
   Variant,
 
@@ -87,6 +88,7 @@ impl Kind {
       Self::Function  => color!("func   ", magenta),
       Self::Method    => color!("method ", magenta),
       Self::Impl      => color!("impl   ", magenta),
+      Self::Field     => color!("field  ", magenta),
 
       Self::Variant   => color!("variant", green),
 

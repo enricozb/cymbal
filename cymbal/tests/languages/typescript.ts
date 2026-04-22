@@ -22,6 +22,9 @@ export interface User {
 }
 
 export class UserService {
+  private cache: Map<string, User> = new Map();
+  readonly maxRetries: number = 3;
+
   constructor(private readonly repo: Repository<User>) {}
 
   async getUser(id: UserId): Promise<User | null> {
