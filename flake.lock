@@ -455,11 +455,11 @@
     "tree-sitter-vine": {
       "flake": false,
       "locked": {
-        "lastModified": 1773336244,
-        "narHash": "sha256-rtM0DmIF1L9KRg/PpFsQkkMFmlFVg6PAVeRyMblk2zw=",
+        "lastModified": 1778248851,
+        "narHash": "sha256-on1ilB63haR258UC4rbiAvoprTGFIlJmEN0XaiJNghg=",
         "owner": "VineLang",
         "repo": "vine",
-        "rev": "41e5ec678d02e25319c4ef43bf3581bf3f013c84",
+        "rev": "bacdeb4c00b7be068d097911478ec77b26539e5c",
         "type": "github"
       },
       "original": {
