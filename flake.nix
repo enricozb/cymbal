@@ -9,10 +9,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    trix = {
-      url = "github:enricozb/trix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    trix.url = "github:enricozb/trix";
     tree-sitter-c = {
       url = "github:tree-sitter/tree-sitter-c";
       flake = false;
@@ -150,7 +147,7 @@
           kak.src = tree-sitter-kak;
           nu.src = tree-sitter-nu;
         };
-        grammars = trix.mkTrixConfig.${system} grammar-srcs;
+        trixLib = trix.mkLib pkgs grammar-srcs;
       in
       {
         packages.default =
@@ -160,15 +157,15 @@
           craneLib.buildPackage {
             inherit (cargo-toml) pname version;
             src = cymbalSrc;
-            env.TRIX_CONFIG = grammars;
           };
 
         devShells.default = craneLib.devShell {
-          TRIX_CONFIG = grammars;
           packages = [
             pkgs.cargo-expand
             pkgs.nodejs_24
             pkgs.tree-sitter
+
+            trixLib.vendor
           ];
         };
 

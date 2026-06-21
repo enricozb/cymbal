@@ -7,6 +7,17 @@ license = "CC0-1.0"
 repository = "https://github.com/enricozb/cymbal"
 readme = "../readme.md"
 
+# `trix-vendor` grammars are git-ignored, but are required for `cargo publish`.
+include = [
+  "src/**/*.rs",
+  "build.rs",
+  "default-config.toml",
+  "vendor/grammars/**/*.c",
+  "vendor/grammars/**/*.h",
+  "vendor/grammars/**/tree-sitter.json",
+  "vendor/grammars/trix-config.json",
+]
+
 [dependencies]
 anyhow = "1.0.97"
 async-channel = "2.5.0"
@@ -25,7 +36,7 @@ tree-sitter = "0.26"
 walkdir = "2.5.0"
 
 [build-dependencies]
-trix-build = "0.5"
+trix-build = "0.6.1"
 
 [lints]
 workspace = true

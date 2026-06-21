@@ -6,5 +6,6 @@
 /.envrc
 /result
 
-# tree-sitter
-vendor/grammars/*/src
+# tree-sitter & trix
+# vendored grammar sources via `trix vendor`, needed for `cargo publish`
+/cymbal/vendor/

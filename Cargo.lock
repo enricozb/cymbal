@@ -1915,9 +1915,9 @@ checksum = "c4013970217383f67b18aef68f6fb2e8d409bc5755227092d32efb0422ba24b8"
 
 [[package]]
 name = "trix-build"
-version = "0.5.0"
+version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0afdafde8197afc482a1297534cbae4ca976b8cf81ed4ddd4416531b36dfbe1c"
+checksum = "a4037ecb0a10855116f007399ba2cf5a1cf93a62fbfedb0e780fd0bf2665b339"
 dependencies = [
  "cc",
  "prettyplease",
