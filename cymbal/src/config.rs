@@ -109,11 +109,10 @@ pub enum Language {
   Python,
   #[assoc(colored = color!("rs  ", yellow), from_extension = "rs")]
   Rust,
-  #[assoc(colored = color!("ts  ", blue), from_extension = "js" | "jsx")]
+  #[assoc(colored = color!("js  ", blue), from_extension = "js" | "jsx")]
   JavaScript,
-  #[assoc(colored = color!("ts  ", blue), from_extension = "ts")]
-  TypeScript,
-  #[assoc(colored = color!("tsx ", blue), from_extension = "tsx")]
+  #[assoc(colored = color!("ts  ", blue), from_extension = "ts" | "tsx")]
+  #[serde(alias = "typescript")]
   TSX,
   #[assoc(colored = color!("ivy ", green), from_extension = "iv")]
   Ivy,

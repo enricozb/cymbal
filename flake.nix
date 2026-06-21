@@ -136,10 +136,7 @@
           javascript.src = tree-sitter-javascript;
           typescript = {
             src = tree-sitter-typescript;
-            filter = [
-              "typescript"
-              "tsx"
-            ];
+            filter = [ "tsx" ];
           };
           json.src = tree-sitter-json;
           ivy.src = "${tree-sitter-vine}/lsp/tree-sitter-ivy";
