@@ -93,7 +93,7 @@ impl Query {
 pub enum Language {
   #[assoc(to_str = "c   ", color = BLUE, from_extension = "c" | "h")]
   C,
-  #[assoc(to_str = "c++ ", color = BLUE, from_extension = "cpp" | "cc" | "hh")]
+  #[assoc(to_str = "c++ ", color = BLUE, from_extension = "cpp" | "cc" | "hpp" | "hh")]
   CPP,
   #[assoc(to_str = "fish", color = GREEN, from_extension = "fish")]
   Fish,
