@@ -1,6 +1,6 @@
 mod raw;
 
-use std::{collections::HashMap, path::Path};
+use std::{collections::HashMap, ffi::OsStr, path::Path};
 
 use anyhow::Result;
 use clap::ValueEnum;
@@ -87,6 +87,7 @@ impl Query {
 #[serde(rename_all = "lowercase")]
 #[value(rename_all = "lowercase")]
 #[func(pub fn from_extension(s: &str) -> Option<Self>)]
+#[func(pub fn from_file_name(s: &str) -> Option<Self> { None })]
 #[func(pub const fn colored(&self) -> &'static str)]
 pub enum Language {
   #[assoc(colored = color!("c   ", blue), from_extension = "c" | "h")]
@@ -118,7 +119,7 @@ pub enum Language {
   Ivy,
   #[assoc(colored = color!("vine", green), from_extension = "vi")]
   Vine,
-  #[assoc(colored = color!("kak ", green), from_extension = "kak")]
+  #[assoc(colored = color!("kak ", green), from_extension = "kak", from_file_name = "kakrc")]
   Kak,
   #[assoc(colored = color!("nu  ", blue), from_extension = "nu")]
   Nu,
@@ -128,7 +129,13 @@ languages_impl!(Language);
 
 impl Language {
   pub fn from_file_path<P: AsRef<Path>>(file_path: P) -> Option<Self> {
-    Self::from_extension(file_path.as_ref().extension()?.to_str()?)
+    let file_path = file_path.as_ref();
+    let file_name = file_path.file_name().and_then(OsStr::to_str);
+    let extension = file_path.extension().and_then(OsStr::to_str);
+
+    extension
+      .and_then(Self::from_extension)
+      .or_else(|| file_name.and_then(Self::from_file_name))
   }
 }
 

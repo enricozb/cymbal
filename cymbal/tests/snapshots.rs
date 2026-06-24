@@ -34,12 +34,9 @@ fn snapshots_dir() -> PathBuf {
 }
 
 async fn check(filename: &str) {
-  let ext = Path::new(filename)
-    .extension()
-    .and_then(|e| e.to_str())
-    .unwrap_or_else(|| panic!("no extension on {filename}"));
+  let path = Path::new(filename);
 
-  let language = Language::from_extension(ext).unwrap_or_else(|| panic!("no language for extension {ext:?} (file: {filename})"));
+  let language = Language::from_file_path(path).unwrap_or_else(|| panic!("no language for path {path:?}"));
 
   let config: &'static Config = Box::leak(Box::new(Config::default()));
 
