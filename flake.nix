@@ -154,6 +154,10 @@
           craneLib.buildPackage {
             inherit (cargo-toml) pname version;
             src = cymbalSrc;
+            nativeBuildInputs = [ trixLib.vendor ];
+            preBuild = ''
+              trix-vendor --dir cymbal/vendor/grammars
+            '';
           };
 
         devShells.default = craneLib.devShell {
