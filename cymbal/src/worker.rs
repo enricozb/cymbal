@@ -19,16 +19,26 @@ pub struct Worker<W: Write> {
   receiver: Receiver,
   delimiter: char,
   separator: char,
+  color: bool,
   writer: W,
 }
 
 impl<W: Write> Worker<W> {
-  pub fn new(cache: Option<Cache>, config: &'static Config, receiver: Receiver, delimiter: char, separator: char, writer: W) -> Self {
+  pub fn new(
+    cache: Option<Cache>,
+    config: &'static Config,
+    receiver: Receiver,
+    delimiter: char,
+    separator: char,
+    color: bool,
+    writer: W,
+  ) -> Self {
     Self {
       cache,
       config,
       receiver,
       delimiter,
+      color,
       separator,
       writer,
     }
@@ -107,8 +117,8 @@ impl<W: Write> Worker<W> {
     write!(
       self.writer,
       "{lang}{dlm}{kind}{dlm}{path}{dlm}{line}{dlm}{col}{dlm}{lead}{dlm}{text}{dlm}{trail}{end}",
-      lang = symbol.language.colored(),
-      kind = symbol.kind.colored(),
+      lang = symbol.language.colored(self.color),
+      kind = symbol.kind.colored(self.color),
       path = file_path.display(),
       line = symbol.line,
       col = symbol.column,

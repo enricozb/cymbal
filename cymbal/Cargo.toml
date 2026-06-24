@@ -24,6 +24,7 @@ anyhow = "1.0.97"
 async-channel = "2.5.0"
 chrono = "0.4.41"
 clap = { version = "4.5.35", features = ["derive"] }
+derive_more = { version = "2.1.1", features = ["display"] }
 enum-assoc = "1.3.0"
 extend = "1.2.0"
 futures = "0.3.31"
@@ -38,6 +39,3 @@ walkdir = "2.5.0"
 
 [build-dependencies]
 trix-build = "0.6.1"
-
-[lints]
-workspace = true

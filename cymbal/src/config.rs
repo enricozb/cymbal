@@ -11,12 +11,12 @@ use sqlx::Type as SqlxType;
 use tree_sitter::Query as TreeSitterQuery;
 
 use crate::{
-  color,
+  color::{BLUE, BRIGHT_YELLOW, CYAN, GREEN, MAGENTA, YELLOW},
   config::raw::RawConfig,
   ext::{PathExt, TomlExt},
   symbol::Kind,
   template::Template,
-  utils::Lazy,
+  utils::{Colored, Lazy},
 };
 
 include!(concat!(env!("OUT_DIR"), "/", "grammars.rs"));
@@ -88,40 +88,41 @@ impl Query {
 #[value(rename_all = "lowercase")]
 #[func(pub fn from_extension(s: &str) -> Option<Self>)]
 #[func(pub fn from_file_name(s: &str) -> Option<Self> { None })]
-#[func(pub const fn colored(&self) -> &'static str)]
+#[func(pub const fn to_str(&self) -> &'static str)]
+#[func(pub const fn color(&self) -> &'static str)]
 pub enum Language {
-  #[assoc(colored = color!("c   ", blue), from_extension = "c" | "h")]
+  #[assoc(to_str = "c   ", color = BLUE, from_extension = "c" | "h")]
   C,
-  #[assoc(colored = color!("c++ ", blue), from_extension = "cpp" | "cc" | "hh")]
+  #[assoc(to_str = "c++ ", color = BLUE, from_extension = "cpp" | "cc" | "hh")]
   CPP,
-  #[assoc(colored = color!("fish", green), from_extension = "fish")]
+  #[assoc(to_str = "fish", color = GREEN, from_extension = "fish")]
   Fish,
-  #[assoc(colored = color!("go  ", cyan), from_extension = "go")]
+  #[assoc(to_str = "go  ", color = CYAN, from_extension = "go")]
   Go,
-  #[assoc(colored = color!("hs  ", magenta), from_extension = "hs")]
+  #[assoc(to_str = "hs  ", color = MAGENTA, from_extension = "hs")]
   Haskell,
-  #[assoc(colored = color!("json", green), from_extension = "json")]
+  #[assoc(to_str = "json", color = GREEN, from_extension = "json")]
   JSON,
-  #[assoc(colored = color!("flow", yellow), from_extension = "ml")]
+  #[assoc(to_str = "caml", color = YELLOW, from_extension = "ml")]
   OCaml,
-  #[assoc(colored = color!("odin", blue), from_extension = "odin")]
+  #[assoc(to_str = "odin", color = BLUE, from_extension = "odin")]
   Odin,
-  #[assoc(colored = color!("py  ", bright_yellow), from_extension = "py")]
+  #[assoc(to_str = "py  ", color = BRIGHT_YELLOW, from_extension = "py")]
   Python,
-  #[assoc(colored = color!("rs  ", yellow), from_extension = "rs")]
+  #[assoc(to_str = "rs  ", color = YELLOW, from_extension = "rs")]
   Rust,
-  #[assoc(colored = color!("js  ", blue), from_extension = "js" | "jsx")]
+  #[assoc(to_str = "js  ", color = BLUE, from_extension = "js" | "jsx")]
   JavaScript,
-  #[assoc(colored = color!("ts  ", blue), from_extension = "ts" | "tsx")]
+  #[assoc(to_str = "ts  ", color = BLUE, from_extension = "ts" | "tsx")]
   #[serde(alias = "typescript")]
   TSX,
-  #[assoc(colored = color!("ivy ", green), from_extension = "iv")]
+  #[assoc(to_str = "ivy ", color = GREEN, from_extension = "iv")]
   Ivy,
-  #[assoc(colored = color!("vine", green), from_extension = "vi")]
+  #[assoc(to_str = "vine", color = GREEN, from_extension = "vi")]
   Vine,
-  #[assoc(colored = color!("kak ", green), from_extension = "kak", from_file_name = "kakrc")]
+  #[assoc(to_str = "kak ", color = GREEN, from_extension = "kak", from_file_name = "kakrc")]
   Kak,
-  #[assoc(colored = color!("nu  ", blue), from_extension = "nu")]
+  #[assoc(to_str = "nu  ", color = BLUE, from_extension = "nu")]
   Nu,
 }
 
@@ -136,6 +137,13 @@ impl Language {
     extension
       .and_then(Self::from_extension)
       .or_else(|| file_name.and_then(Self::from_file_name))
+  }
+
+  pub const fn colored(&self, color: bool) -> Colored {
+    Colored {
+      string: self.to_str(),
+      color: if color { Some(self.color()) } else { None },
+    }
   }
 }
 

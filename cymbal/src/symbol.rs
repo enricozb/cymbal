@@ -1,8 +1,13 @@
 use chrono::{DateTime, Utc};
+use enum_assoc::Assoc;
 use serde::Deserialize;
 use sqlx::Type as SqlxType;
 
-use crate::{color, config::Language};
+use crate::{
+  color::{BLUE, CYAN, GREEN, MAGENTA, YELLOW},
+  config::Language,
+  utils::Colored,
+};
 
 #[derive(sqlx::FromRow)]
 pub struct FileInfo {
@@ -31,69 +36,64 @@ impl Symbol {
   }
 }
 
-#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq, Hash, SqlxType)]
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq, Hash, Assoc, SqlxType)]
+#[func(pub const fn color(&self) -> &'static str)]
+#[func(pub const fn to_str(&self) -> &'static str)]
 #[serde(rename_all = "lowercase")]
 #[repr(u8)]
 pub enum Kind {
+  #[assoc(to_str = "module ", color = YELLOW)]
   Module,
+  #[assoc(to_str = "macro  ", color = YELLOW)]
   Macro,
+  #[assoc(to_str = "global ", color = YELLOW)]
   Global,
+  #[assoc(to_str = "const  ", color = YELLOW)]
   Constant,
+  #[assoc(to_str = "define ", color = YELLOW)]
   Define,
 
+  #[assoc(to_str = "class  ", color = CYAN)]
   Class,
+  #[assoc(to_str = "struct ", color = CYAN)]
   Struct,
+  #[assoc(to_str = "enum   ", color = CYAN)]
   Enum,
+  #[assoc(to_str = "union  ", color = CYAN)]
   Union,
 
+  #[assoc(to_str = "alias  ", color = BLUE)]
   Alias,
+  #[assoc(to_str = "inter  ", color = BLUE)]
   Interface,
+  #[assoc(to_str = "trait  ", color = BLUE)]
   Trait,
+  #[assoc(to_str = "type   ", color = BLUE)]
   Type,
 
+  #[assoc(to_str = "func   ", color = MAGENTA)]
   Function,
+  #[assoc(to_str = "method ", color = MAGENTA)]
   Method,
+  #[assoc(to_str = "impl   ", color = MAGENTA)]
   Impl,
+  #[assoc(to_str = "field  ", color = MAGENTA)]
   Field,
 
+  #[assoc(to_str = "variant", color = GREEN)]
   Variant,
 
+  #[assoc(to_str = "mode   ", color = BLUE)]
   Mode,
+  #[assoc(to_str = "hook   ", color = GREEN)]
   Hook,
 }
 
 impl Kind {
-  #[rustfmt::skip]
-  pub fn colored(self) -> &'static str {
-    // TODO(enricozb): have some macro generate this to automatically pad all
-    // symbols.
-    // Note: these strings must all have the same printable length.
-    match self {
-      Self::Module    => color!("module ", yellow),
-      Self::Macro     => color!("macro  ", yellow),
-      Self::Global    => color!("global ", yellow),
-      Self::Constant  => color!("const  ", yellow),
-      Self::Define    => color!("define ", yellow),
-
-      Self::Class     => color!("class  ", cyan),
-      Self::Struct    => color!("struct ", cyan),
-      Self::Enum      => color!("enum   ", cyan),
-      Self::Union     => color!("union  ", cyan),
-
-      Self::Alias     => color!("alias  ", blue),
-      Self::Interface => color!("inter  ", blue),
-      Self::Trait     => color!("trait  ", blue),
-      Self::Type      => color!("type   ", blue),
-
-      Self::Function  => color!("func   ", magenta),
-      Self::Method    => color!("method ", magenta),
-      Self::Impl      => color!("impl   ", magenta),
-      Self::Field     => color!("field  ", magenta),
-
-      Self::Variant   => color!("variant", green),
-
-      Self::Mode      => color!("mode   ", blue),
-      Self::Hook      => color!("hook   ", green),
+  pub const fn colored(&self, color: bool) -> Colored {
+    Colored {
+      string: self.to_str(),
+      color: if color { Some(self.color()) } else { None },
     }
   }
 }

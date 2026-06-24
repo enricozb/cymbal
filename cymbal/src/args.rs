@@ -4,7 +4,8 @@ use std::{
 };
 
 use anyhow::{Context, Result};
-use clap::Parser;
+use clap::{Parser, ValueEnum};
+use derive_more::Display;
 
 use crate::{
   cache::Cache,
@@ -77,6 +78,13 @@ pub struct Args {
   #[arg(long = "cache")]
   cache_dirpath: Option<PathBuf>,
 
+  /// Whether to emit ANSI color escape sequences.
+  ///
+  /// If the `NO_COLOR` environment variable is set, no ANSI color escape
+  /// sequences will be emitted if `--color=auto`.
+  #[arg(long, default_value_t = Color::Auto)]
+  color: Color,
+
   /// The number of parser tasks, or roughly the amount of parallelism.
   #[arg(long)]
   concurrency: Option<NonZero<usize>>,
@@ -140,6 +148,14 @@ impl Args {
     if self.separator0 { '\0' } else { self.separator }
   }
 
+  pub fn color(&self) -> bool {
+    match self.color {
+      Color::Never => false,
+      Color::Always => true,
+      Color::Auto => std::env::var_os("NO_COLOR").is_none(),
+    }
+  }
+
   /// Whether additional restrictions on the set of walked files are present.
   pub fn is_filtering(&self) -> bool {
     self.search_path.is_file() || self.language().is_some()
@@ -148,4 +164,12 @@ impl Args {
   fn language(&self) -> Option<Language> {
     self.language.or(self.extension.as_deref().and_then(Language::from_extension))
   }
+}
+
+#[derive(Copy, Clone, Display, ValueEnum)]
+#[display(rename_all = "lowercase")]
+pub enum Color {
+  Never,
+  Always,
+  Auto,
 }

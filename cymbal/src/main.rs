@@ -24,12 +24,24 @@ async fn main() -> Result<()> {
   let (sender, receiver) = args.channel();
   let delimiter = args.delimiter();
   let separator = args.separator();
+  let color = args.color();
   let should_clean_cache = !args.is_filtering();
   let walker = Walker::new(args.search_path().to_path_buf(), sender, cache.clone(), should_clean_cache).spawn();
 
   let mut workers = JoinSet::new();
   for _ in 0..available_concurrency {
-    workers.spawn(Worker::new(cache.clone(), config, receiver.clone(), delimiter, separator, std::io::stdout()).run());
+    workers.spawn(
+      Worker::new(
+        cache.clone(),
+        config,
+        receiver.clone(),
+        delimiter,
+        separator,
+        color,
+        std::io::stdout(),
+      )
+      .run(),
+    );
   }
   workers.join_all().await.ok_all()?;
 

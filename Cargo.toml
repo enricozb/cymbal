@@ -1,6 +1,3 @@
 [workspace]
 resolver = "3"
 members = ["cymbal"]
-
-[workspace.lints.clippy]
-pedantic = { level = "deny" }

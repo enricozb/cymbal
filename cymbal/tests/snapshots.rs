@@ -48,7 +48,7 @@ async fn check(filename: &str) {
 
   let (_tx, rx) = channel::bounded(1);
   let display_path = Path::new("tests/languages").join(filename);
-  let mut worker = Worker::new(None, config, rx, ' ', '\n', Vec::<u8>::new());
+  let mut worker = Worker::new(None, config, rx, ' ', '\n', true, Vec::<u8>::new());
   worker.emit_symbols(&display_path, symbol_stream).await.unwrap();
   let snapshot = String::from_utf8(worker.into_writer()).unwrap();
 
