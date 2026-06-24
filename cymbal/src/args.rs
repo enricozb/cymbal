@@ -38,15 +38,23 @@ pub struct Args {
   /// This is the character between the file path, location, kind, text, and
   /// leading/trailing text written to stdout.
   ///
-  /// This defaults to U+200B (zero-width space).
-  #[arg(short, long, default_value_t = '\u{200B}')]
+  /// This defaults to a space.
+  #[arg(short, long, default_value_t = ' ')]
   delimiter: char,
+
+  /// Set `delimiter` to the null byte. This overrides any `delimiter` value.
+  #[arg(long)]
+  delimiter0: bool,
 
   /// The character between symbols.
   ///
-  /// This defaults to U+0 (null byte).
-  #[arg(short, long, default_value_t = '\0')]
+  /// This defaults to a newline.
+  #[arg(short, long, default_value_t = '\n')]
   separator: char,
+
+  /// Set `separator` to the null byte. This overrides any `separator` value.
+  #[arg(long)]
+  separator0: bool,
 
   /// Only show symbols from files with extensions matching this language.
   ///
@@ -125,11 +133,11 @@ impl Args {
   }
 
   pub fn delimiter(&self) -> char {
-    self.delimiter
+    if self.delimiter0 { '\0' } else { self.delimiter }
   }
 
   pub fn separator(&self) -> char {
-    self.separator
+    if self.separator0 { '\0' } else { self.separator }
   }
 
   /// Whether additional restrictions on the set of walked files are present.
