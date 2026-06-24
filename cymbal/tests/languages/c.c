@@ -28,6 +28,16 @@ enum Direction {
 
 typedef enum Direction Direction;
 
+typedef struct Node {
+  int value;
+  struct Node *next;
+} Node;
+
+typedef union Word {
+  uint16_t half;
+  uint8_t byte[2];
+} Word;
+
 double point_distance(Point a, Point b) {
   double dx = a.x - b.x;
   double dy = a.y - b.y;

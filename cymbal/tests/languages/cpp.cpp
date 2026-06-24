@@ -3,6 +3,13 @@
 
 typedef unsigned int uint;
 
+typedef struct Node {
+  int value;
+  Node *next;
+} Node;
+
+typedef enum Color { RED, GREEN, BLUE } Color;
+
 struct Vec2 {
   double x;
   double y;

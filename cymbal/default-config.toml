@@ -1,20 +1,15 @@
 [c]
 struct = '(struct_specifier name: (type_identifier) @symbol)'
-type = [
-  '(declaration type: (union_specifier name: (type_identifier) @symbol))',
-  '(type_definition declarator: (type_identifier) @symbol)'
-]
-function = '(function_declarator declarator: (identifier) @symbol)'
 enum = '(enum_specifier name: (type_identifier) @symbol)'
+union = '(union_specifier name: (type_identifier) @symbol)'
+function = '(function_declarator declarator: (identifier) @symbol)'
+type = '(type_definition declarator: (type_identifier) @symbol)'
 
 [cpp]
-type = [
-  '(type_definition declarator: (type_identifier) @symbol)',
-  '(enum_specifier name: (type_identifier) @symbol)',
-]
+enum = '(enum_specifier name: (type_identifier) @symbol)'
+union = '(union_specifier name: (type_identifier) @symbol)'
 class = [
   '(struct_specifier name: (type_identifier) @symbol body:(_))',
-  '(declaration type: (union_specifier name: (type_identifier) @symbol))',
   '(class_specifier name: (type_identifier) @symbol)',
 ]
 function = [
@@ -24,6 +19,7 @@ method = [
   { leading = '{scope}::', query = '(function_declarator declarator: (qualified_identifier scope: (_) @scope name: (identifier) @symbol))' },
   { leading = '{scope.1}::{scope.2}::', query = '(function_declarator declarator: (qualified_identifier scope: (_) @scope.1 name: (qualified_identifier scope: (_) @scope.2 name: (identifier) @symbol)))' },
 ]
+type = '(type_definition declarator: (type_identifier) @symbol)'
 
 [fish]
 alias = '(command name: _ @command (#eq? @command "alias") . argument: _ @symbol)'

@@ -163,13 +163,10 @@ Each language has a set of queries for different kinds of symbols that can be
 found in that language. For example for C++,
 ```toml
 [cpp]
-type = [
-  '(type_definition declarator: (type_identifier) @symbol)',
-  '(enum_specifier name: (type_identifier) @symbol)',
-]
+enum = '(enum_specifier name: (type_identifier) @symbol)'
+union = '(union_specifier name: (type_identifier) @symbol)'
 class = [
   '(struct_specifier name: (type_identifier) @symbol body:(_))',
-  '(declaration type: (union_specifier name: (type_identifier) @symbol))',
   '(class_specifier name: (type_identifier) @symbol)',
 ]
 function = '(function_declarator declarator: (identifier) @symbol)'
@@ -177,6 +174,7 @@ method = [
   { leading = '{scope}::', query = '(function_declarator declarator: (qualified_identifier scope: (_) @scope name: (identifier) @symbol))' },
   { leading = '{scope.1}::{scope.2}::', query = '(function_declarator declarator: (qualified_identifier scope: (_) @scope.1 name: (qualified_identifier scope: (_) @scope.2 name: (identifier) @symbol)))' },
 ]
+type = '(type_definition declarator: (type_identifier) @symbol)'
 ```
 There is a fixed set of symbols that are valid, see [`symbol.rs`][6]. For each
 language, each symbol kind can have multiple queries, such as `method` above.
