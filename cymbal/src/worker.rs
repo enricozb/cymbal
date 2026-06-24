@@ -68,8 +68,10 @@ impl<W: Write> Worker<W> {
 
     if cache.is_file_cached(file_path, file_modified).await? {
       let symbol_stream = cache.get_symbols(file_path).filter_ok();
+      let result = self.emit_symbols(file_path, symbol_stream).await;
+      self.cache = Some(cache);
 
-      return self.emit_symbols(file_path, symbol_stream).await;
+      return result;
     }
     let symbol_stream = Parser::new(file_path, language, self.config).symbol_stream().await?;
     self.cache_and_emit_symbols(&cache, file_path, file_modified, symbol_stream).await?;
