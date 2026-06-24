@@ -70,6 +70,8 @@ entire symbol including leading and trailing text.
 
 ## Usage (`cymbal -h`)
 ```
+search for symbols in a codebase
+
 Usage: cymbal [OPTIONS] [SEARCH_PATH]
 
 Arguments:
@@ -126,6 +128,14 @@ Options:
           Directory to cache parsed symbols.
 
           Files are reparsed if their cached mtime differs from than their current mtime, or the path of the file doesn't exist in the cache. This option is typically used when `symbols` is called from the same directory multiple times, such as searching over a code base in an editor.
+
+      --color <COLOR>
+          Whether to emit ANSI color escape sequences.
+
+          If the `NO_COLOR` environment variable is set, no ANSI color escape sequences will be emitted if `--color=auto`.
+
+          [default: auto]
+          [possible values: never, always, auto]
 
       --concurrency <CONCURRENCY>
           The number of parser tasks, or roughly the amount of parallelism
