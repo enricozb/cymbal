@@ -1,22 +1,27 @@
 # cymbal - list symbols in a codebase
 
 ## Overview
-`cymbal` lists all symbols in a codebase. For example,
+`cymbal` lists all symbols in a codebase. For example (in bash),
 ```
-$ cymbal --delimiter ' ' --separator \n
-(rs) (impl)   ./cymbal/src/ext.rs 10 20  ResultExt
-(rs) (impl)   ./cymbal/src/ext.rs 31 20  OptionExt
-(rs) (enum)   ./cymbal/src/config.rs 19 10  Language
-(rs) (func)   ./cymbal/src/args.rs 82 6  raw_config
-(rs) (func)   ./cymbal/src/args.rs 140 10  num_threads
-(rs) (struct) ./cymbal/src/symbol.rs 6 12  Symbol
-(rs) (func)   ./cymbal/src/text.rs 10 10  new
-(rs) (struct) ./cymbal/src/cache.rs 16 12  Cache
-(rs) (struct) ./cymbal/src/cache.rs 22 12  FileInfo
-(rs) (struct) ./cymbal/src/text.rs 16 12  Span
-(rs) (impl)   ./cymbal/src/text.rs 9 6  Loc
+cymbal --language rust
+rs   type    ./cymbal/src/utils.rs 7 9  Lazy
+rs   struct  ./cymbal/src/utils.rs 11 11  RawPath
+rs   method  ./cymbal/src/utils.rs 14 5 RawPath:: from
+rs   method  ./cymbal/src/utils.rs 20 5 PathBuf:: from
+rs   impl    ./cymbal/src/utils.rs 13 23 From<PathBuf> for  RawPath
+rs   impl    ./cymbal/src/utils.rs 19 23 From<RawPath> for  PathBuf
+rs   const   ./cymbal/tests/languages/rust.rs 4 11  GLOBAL_COUNTER
 ...
 ```
+
+The output columns are
+```
+language kind path line column leading symbol trailing
+```
+
+## Install
+Install with `cargo install cymbal` or via the `flake.nix`.
+
 
 ## Use-Case: Jump to symbol from command-line
 A potential use of `cymbal` is to jump to symbols from the command-line:
@@ -25,7 +30,7 @@ A potential use of `cymbal` is to jump to symbols from the command-line:
 This was done using the following fish functions:
 ```fish
 function symbol-search -d "shows an fzf menu with symbols at the current directory"
-  cymbal --delimiter \u0c | fzf \
+  cymbal --delimiter \u0c --separator0 | fzf \
     --delimiter \u0c \
     --read0 \
     --ansi \
@@ -63,70 +68,74 @@ end
 This example sets up `<c-r>` as a toggle within [fzf][2] to filter for the
 entire symbol including leading and trailing text.
 
-## Usage
+## Usage (`cymbal -h`)
 ```
-Usage: cymbal [OPTIONS] [PATH]
+Usage: cymbal [OPTIONS] [SEARCH_PATH]
 
 Arguments:
-  [PATH]
+  [SEARCH_PATH]
+          The file or directory to search for symbols in.
+
+          If this is a directory, it is recursively searched for files with supported extensions.
+
+          If this is a file, it is searched for symbols, and the `--language` flag is ignored, and the language appropriate for the file is used.
+
           [default: .]
 
 Options:
-  -c, --config <CONFIG>
-          Language configurations.
+  -c, --config <CONFIG_PATH>
+          A toml file with language queries and symbols.
 
-          This can either be a path to a .toml file or a TOML string.
-
-          The default configuration will be applied if this argument is not provided or if it is the empty string.
-
-      --cache-dir <CACHE_DIR>
-          Directory to cache parsed symbols.
-
-          Files are reparsed if their cached mtime differs from than their current mtime, or the path of the file doesn't exist in the cache. This option is typically used when `symbols` is called from the same directory multiple times, such as searching over a code base in an editor.
-
-          The directory is created if it does not exist.
+          The default configuration will be applied if this argument is not provided.
 
   -d, --delimiter <DELIMITER>
           The characters between properties of a single symbol.
 
-          This is the character between the path, location, kind, text, and leading/trailing text written to stdout.
+          This is the character between the file path, location, kind, text, and leading/trailing text written to stdout.
 
-          This defaults to U+200B (zero-width space).
+          This defaults to a space.
 
-          [default: ​]
+          [default: " "]
+
+      --delimiter0
+          Set `delimiter` to the null byte. This overrides any `delimiter` value
 
   -s, --separator <SEPARATOR>
           The character between symbols.
 
-          This defaults to the U+0 (null byte).
+          This defaults to a newline.
 
-          [default: ]
+          [default: "\n"]
 
-      --detached
-          Whether to spawn a detached process to index symbols.
+      --separator0
+          Set `separator` to the null byte. This overrides any `separator` value
 
-          Only useful with the `cache-dir` option.
-
-          If this option is false, the cache may not be created if the process is exited prematurely. This can happen if using `symbols` in a pipeline (such as with `fzf`) and selecting a symbol before indexing is complete.
-
-          If this option is true, indexing is performed by a separate detached process whose output is redirected to stdout. Then, if `symbols` is exited prematurely, the indexing will still be able to complete.
-
-  -t, --threads <THREADS>
-          The number of worker threads to use when parsing files.
-
-          This defaults to `std::thread::available_parallelism` if it is available, and otherwise defaults to 8.
-
-  -l, --language <LANGUAGE>
+      --language <LANGUAGE>
           Only show symbols from files with extensions matching this language.
 
-          This option takes precedence over `--extension`.
+          This flag takes precedence over the `--extension` flag.
 
-          [possible values: c, cpp, go, haskell, odin, python, rust, type-script]
+          [possible values: c, cpp, fish, go, haskell, json, ocaml, odin, python, rust, javascript, tsx, ivy, vine, kak, nu]
 
-  -e, --extension <EXTENSION>
-          Only show symbols from files with extensions matching this extension's language. Note that this will not filter for symbols in files matching this extension, but for files with the same language as this extension's.
+      --extension <EXTENSION>
+          Only show symbols from files with the language matching this extension.
 
-          The `--language` option takes precedence over `--extension`.
+          The `--language` flag takes precedence over this flag.
+
+      --cache <CACHE_DIRPATH>
+          Directory to cache parsed symbols.
+
+          Files are reparsed if their cached mtime differs from than their current mtime, or the path of the file doesn't exist in the cache. This option is typically used when `symbols` is called from the same directory multiple times, such as searching over a code base in an editor.
+
+      --concurrency <CONCURRENCY>
+          The number of parser tasks, or roughly the amount of parallelism
+
+      --buffer <CHANNEL_BOUND>
+          The maximum number of files to enqueue at any given time.
+
+          Set to 0 to use an unbounded channel.
+
+          [default: 256]
 
   -h, --help
           Print help (see a summary with '-h')
