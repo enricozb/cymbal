@@ -1,14 +1,14 @@
-[32mvine[0m [33mmodule [0m tests/languages/vine.vi 17 8  N32 
-[32mvine[0m [34mtype   [0m tests/languages/vine.vi 15 9  N32 
-[32mvine[0m [35mimpl   [0m tests/languages/vine.vi 21 13 N32:: Fork[N32] 
-[32mvine[0m [35mimpl   [0m tests/languages/vine.vi 22 13 N32:: Drop[N32] 
-[32mvine[0m [35mimpl   [0m tests/languages/vine.vi 24 13 N32:: Default[N32] 
-[32mvine[0m [35mimpl   [0m tests/languages/vine.vi 28 13 N32:: Add[N32, N32, N32] 
-[32mvine[0m [35mimpl   [0m tests/languages/vine.vi 34 11  to_string 
-[32mvine[0m [33mconst  [0m tests/languages/vine.vi 19 12 N32:: maximum 
-[32mvine[0m [33mconst  [0m tests/languages/vine.vi 25 10  default 
-[32mvine[0m [35mmethod [0m tests/languages/vine.vi 49 10  to_binary_raw 
-[32mvine[0m [35mfunc   [0m tests/languages/vine.vi 35 7 to_string:: cast 
-[32mvine[0m [35mfunc   [0m tests/languages/vine.vi 29 7  add 
-[32mvine[0m [35mfunc   [0m tests/languages/vine.vi 61 17  add_high 
-[32mvine[0m [35mfunc   [0m tests/languages/vine.vi 65 17  mul_high 
+[32mvine[0m [33mmodule [0m tests/languages/vine.vi 17 9  N32 
+[32mvine[0m [34mtype   [0m tests/languages/vine.vi 15 10  N32 
+[32mvine[0m [35mimpl   [0m tests/languages/vine.vi 21 14 N32:: Fork[N32] 
+[32mvine[0m [35mimpl   [0m tests/languages/vine.vi 22 14 N32:: Drop[N32] 
+[32mvine[0m [35mimpl   [0m tests/languages/vine.vi 24 14 N32:: Default[N32] 
+[32mvine[0m [35mimpl   [0m tests/languages/vine.vi 28 14 N32:: Add[N32, N32, N32] 
+[32mvine[0m [35mimpl   [0m tests/languages/vine.vi 34 12  to_string 
+[32mvine[0m [33mconst  [0m tests/languages/vine.vi 19 13 N32:: maximum 
+[32mvine[0m [33mconst  [0m tests/languages/vine.vi 25 11  default 
+[32mvine[0m [35mmethod [0m tests/languages/vine.vi 49 11  to_binary_raw 
+[32mvine[0m [35mfunc   [0m tests/languages/vine.vi 35 8 to_string:: cast 
+[32mvine[0m [35mfunc   [0m tests/languages/vine.vi 29 8  add 
+[32mvine[0m [35mfunc   [0m tests/languages/vine.vi 61 18  add_high 
+[32mvine[0m [35mfunc   [0m tests/languages/vine.vi 65 18  mul_high 
