@@ -216,6 +216,7 @@ pub enum Language {
   JavaScript,
   #[assoc(to_str = "ts  ", color = BLUE, from_extension = "ts" | "tsx")]
   #[serde(alias = "typescript")]
+  #[value(alias("typescript"), hide = false)]
   TSX,
   #[assoc(to_str = "ivy ", color = GREEN, from_extension = "iv")]
   Ivy,
