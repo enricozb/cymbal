@@ -194,15 +194,15 @@
     "tree-sitter-haskell": {
       "flake": false,
       "locked": {
-        "lastModified": 1738310106,
-        "narHash": "sha256-0wmdbXHZbHkv4pTrB1fCbExx9E83l+zaocGa+SvQsZQ=",
-        "owner": "tree-sitter",
+        "lastModified": 1781239373,
+        "narHash": "sha256-eunizglx3nye3LZIAndBX/hf0BvFOWmThQwxvvjqcfU=",
+        "owner": "tree-sitter-grammars",
         "repo": "tree-sitter-haskell",
-        "rev": "0975ef72fc3c47b530309ca93937d7d143523628",
+        "rev": "98aedbd2d6947a168ba3ba3755d70b0cb6b78395",
         "type": "github"
       },
       "original": {
-        "owner": "tree-sitter",
+        "owner": "tree-sitter-grammars",
         "repo": "tree-sitter-haskell",
         "type": "github"
       }

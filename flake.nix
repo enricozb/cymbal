@@ -27,7 +27,7 @@
       flake = false;
     };
     tree-sitter-haskell = {
-      url = "github:tree-sitter/tree-sitter-haskell";
+      url = "github:tree-sitter-grammars/tree-sitter-haskell";
       flake = false;
     };
     tree-sitter-ocaml = {

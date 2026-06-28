@@ -182,7 +182,7 @@ constant = '(program (export_statement declaration: (lexical_declaration kind: "
 
 [haskell]
 type = [
-  '(type_synomym name: (name) @symbol)',
+  '(type_synonym name: (name) @symbol)',
   '(data_type name: (name) @symbol)',
 ]
 function = '(haskell declarations: (declarations (signature name: (variable) @symbol)))'
