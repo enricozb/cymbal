@@ -1,0 +1,8 @@
+[34mlua [0m [35mfunc   [0m tests/languages/lua.lua 2 16  x 
+[34mlua [0m [35mfunc   [0m tests/languages/lua.lua 3 17  y 
+[34mlua [0m [35mfunc   [0m tests/languages/lua.lua 4 7  x 
+[34mlua [0m [35mfunc   [0m tests/languages/lua.lua 5 8  y 
+[34mlua [0m [35mmethod [0m tests/languages/lua.lua 9 16 Point: move 
+[34mlua [0m [35mmethod [0m tests/languages/lua.lua 8 16 Point. new 
+[34mlua [0m [33mglobal [0m tests/languages/lua.lua 12 8  x 
+[34mlua [0m [33mglobal [0m tests/languages/lua.lua 13 8  y 

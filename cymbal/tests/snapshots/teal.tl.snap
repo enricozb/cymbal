@@ -1,0 +1,15 @@
+[34mteal[0m [35mfunc   [0m tests/languages/teal.tl 2 16  x 
+[34mteal[0m [35mfunc   [0m tests/languages/teal.tl 4 17  y 
+[34mteal[0m [35mfunc   [0m tests/languages/teal.tl 6 7  x 
+[34mteal[0m [35mfunc   [0m tests/languages/teal.tl 7 8  y 
+[34mteal[0m [35mmethod [0m tests/languages/teal.tl 12 16 Point: move 
+[34mteal[0m [35mmethod [0m tests/languages/teal.tl 10 16 Point. new 
+[34mteal[0m [36mstruct [0m tests/languages/teal.tl 16 14  Obj 
+[34mteal[0m [36mstruct [0m tests/languages/teal.tl 18 15  Obj 
+[34mteal[0m [34minter  [0m tests/languages/teal.tl 22 17  MyAbstractInterface 
+[34mteal[0m [34minter  [0m tests/languages/teal.tl 24 18  MyAbstractInterface 
+[34mteal[0m [34mtype   [0m tests/languages/teal.tl 28 12  Enum 
+[34mteal[0m [34mtype   [0m tests/languages/teal.tl 30 12  Record 
+[34mteal[0m [33mglobal [0m tests/languages/teal.tl 34 8  x 
+[34mteal[0m [33mglobal [0m tests/languages/teal.tl 35 8  y 
+[34mteal[0m [33mmacro  [0m tests/languages/teal.tl 38 16  add 

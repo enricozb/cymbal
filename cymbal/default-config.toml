@@ -234,3 +234,32 @@ function = [
   { leading = '{trait}::', query = '(item_trait (ident) @trait (item_fn (ident) @symbol))' },
   '(item_fn (ident) @symbol)',
 ]
+
+[lua]
+function = [
+  '(function_declaration name: (identifier) @symbol)',
+  '(variable_declaration (assignment_statement (variable_list name: (identifier) @symbol) (expression_list value: (function_definition))))'
+]
+method = [
+  { leading = '{scope}:', query = '(function_declaration name: (method_index_expression table: (identifier) @scope method: (identifier) @symbol))' },
+  { leading = '{scope}.', query = '(function_declaration name: (dot_index_expression table: (identifier) @scope field: (identifier) @symbol))' },
+]
+global = [
+  'global_declaration: (variable_declaration (assignment_statement (variable_list name: (identifier) @symbol)))',
+]
+
+[teal]
+function = [
+  '(function_statement name: (identifier) @symbol)',
+  '(var_declaration declarators: (var_declarators (var name: (identifier) @symbol)) initializers: (expressions (anon_function)))'
+]
+method = [
+  { leading = '{scope}:', query = '(function_statement name: (function_name base: (identifier) @scope method: (identifier) @symbol))' },
+  { leading = '{scope}.', query = '(function_statement name: (function_name base: (identifier) @scope entry: (identifier) @symbol))' },
+]
+struct = '(record_declaration name: (identifier) @symbol record_body: (record_body))'
+interface = '(interface_declaration name: (identifier) @symbol interface_body: (interface_body))'
+enum = '(enum_declaration name: (identifier) @symbol enum_body: (enum_body))'
+type = '(type_declaration name: (identifier) @symbol)'
+global = '(program (var_declaration declarators: (var_declarators (var name: (identifier) @symbol))))'
+macro = '(macroexp_statement name: (identifier) @symbol body: (macroexp_body (return_statement)))'
