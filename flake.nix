@@ -122,7 +122,10 @@
           };
         grammar-srcs = {
           c.src = tree-sitter-c;
-          cpp.src = tree-sitter-cpp;
+          cpp = {
+            src = tree-sitter-cpp;
+            npmDepsHash = "sha256-e+LlXgdzNWJsZY4SkStOnyc1V8kngFColbF5tfVVg/8=";
+          };
           fish.src = tree-sitter-fish;
           go.src = tree-sitter-go;
           haskell.src = tree-sitter-haskell;
@@ -137,6 +140,7 @@
           typescript = {
             src = tree-sitter-typescript;
             filter = [ "tsx" ];
+            npmDepsHash = "sha256-C377bZ1ikMpwXD2LvEp01/a37GOh5FT0fUj8DKdTYyw=";
           };
           json.src = tree-sitter-json;
           ivy.src = "${tree-sitter-vine}/lsp/tree-sitter-ivy";

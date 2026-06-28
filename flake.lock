@@ -369,11 +369,11 @@
     },
     "trix": {
       "locked": {
-        "lastModified": 1782624643,
-        "narHash": "sha256-wkbV52anKqxjZstPf+Mpg8ggg1PwDoELuEFccEb8zxU=",
+        "lastModified": 1782644710,
+        "narHash": "sha256-wBreYXlGxTgmPiOYjjc2cPhpgv6BE3QtbqL25U2MeJo=",
         "owner": "enricozb",
         "repo": "trix",
-        "rev": "78e99eb12a75658bdbef45455fabc58b76bc2eb4",
+        "rev": "937ff49495b70f8b2cd1fffd69204ff1c3098cb0",
         "type": "github"
       },
       "original": {
