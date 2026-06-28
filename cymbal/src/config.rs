@@ -223,6 +223,10 @@ pub enum Language {
   Vine,
   #[assoc(to_str = "kak ", color = GREEN, from_extension = "kak", from_file_name = "kakrc")]
   Kak,
+  #[assoc(to_str = "lua ", color = BLUE, from_extension = "lua" | "rockspec")]
+  Lua,
+  #[assoc(to_str = "teal", color = BLUE, from_extension = "tl")]
+  Teal,
   #[assoc(to_str = "nu  ", color = BLUE, from_extension = "nu")]
   Nu,
 }

@@ -85,11 +85,13 @@
         "tree-sitter-javascript": "tree-sitter-javascript",
         "tree-sitter-json": "tree-sitter-json",
         "tree-sitter-kak": "tree-sitter-kak",
+        "tree-sitter-lua": "tree-sitter-lua",
         "tree-sitter-nu": "tree-sitter-nu",
         "tree-sitter-ocaml": "tree-sitter-ocaml",
         "tree-sitter-odin": "tree-sitter-odin",
         "tree-sitter-python": "tree-sitter-python",
         "tree-sitter-rust": "tree-sitter-rust",
+        "tree-sitter-teal": "tree-sitter-teal",
         "tree-sitter-typescript": "tree-sitter-typescript",
         "tree-sitter-vine": "tree-sitter-vine",
         "trix": "trix"
@@ -255,6 +257,22 @@
         "type": "github"
       }
     },
+    "tree-sitter-lua": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1772128655,
+        "narHash": "sha256-VzaaN5pj7jMAb/u1fyyH6XmLI+yJpsTlkwpLReTlFNY=",
+        "owner": "tree-sitter-grammars",
+        "repo": "tree-sitter-lua",
+        "rev": "10fe0054734eec83049514ea2e718b2a56acd0c9",
+        "type": "github"
+      },
+      "original": {
+        "owner": "tree-sitter-grammars",
+        "repo": "tree-sitter-lua",
+        "type": "github"
+      }
+    },
     "tree-sitter-nu": {
       "flake": false,
       "locked": {
@@ -332,6 +350,22 @@
       "original": {
         "owner": "tree-sitter",
         "repo": "tree-sitter-rust",
+        "type": "github"
+      }
+    },
+    "tree-sitter-teal": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1747241221,
+        "narHash": "sha256-JDqWr895Ob1Jn3Kf44xbkMJqyna0AiMBU5xJpA6ZP7w=",
+        "owner": "euclidianAce",
+        "repo": "tree-sitter-teal",
+        "rev": "05d276e737055e6f77a21335b7573c9d3c091e2f",
+        "type": "github"
+      },
+      "original": {
+        "owner": "euclidianAce",
+        "repo": "tree-sitter-teal",
         "type": "github"
       }
     },

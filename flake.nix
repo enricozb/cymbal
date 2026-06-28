@@ -66,6 +66,14 @@
       url = "github:saifulapm/tree-sitter-kakscript";
       flake = false;
     };
+    tree-sitter-lua = {
+      url = "github:tree-sitter-grammars/tree-sitter-lua";
+      flake = false;
+    };
+    tree-sitter-teal = {
+      url = "github:euclidianAce/tree-sitter-teal";
+      flake = false;
+    };
     tree-sitter-nu = {
       url = "github:nushell/tree-sitter-nu";
       flake = false;
@@ -89,11 +97,13 @@
       tree-sitter-javascript,
       tree-sitter-json,
       tree-sitter-kak,
+      tree-sitter-lua,
       tree-sitter-nu,
       tree-sitter-ocaml,
       tree-sitter-odin,
       tree-sitter-python,
       tree-sitter-rust,
+      tree-sitter-teal,
       tree-sitter-typescript,
       tree-sitter-vine,
       ...
@@ -146,6 +156,8 @@
           ivy.src = "${tree-sitter-vine}/lsp/tree-sitter-ivy";
           vine.src = "${tree-sitter-vine}/lsp/tree-sitter-vine";
           kak.src = tree-sitter-kak;
+          lua.src = tree-sitter-lua;
+          teal.src = tree-sitter-teal;
           nu.src = tree-sitter-nu;
         };
         trixLib = trix.mkLib pkgs grammar-srcs;
