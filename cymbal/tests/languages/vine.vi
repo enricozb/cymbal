@@ -5,6 +5,9 @@ use ops::{
 };
 use util::{duplicate, erase};
 
+mod bodiless;
+mod pathed = "pathed.vi";
+
 /// Natural numbers represented with 32 bits of precision.
 /// ```vi
 /// let x = 12 + 34;

@@ -191,7 +191,7 @@ function = '(haskell declarations: (declarations (signature name: (variable) @sy
 constant = '(pair key: (string) @symbol)'
 
 [vine]
-module = '(item_mod (ident) @symbol)'
+module = '(item_mod (ident) @symbol "{")'
 enum = '(item_enum (ident) @symbol)'
 struct = '(item_struct (ident) @symbol)'
 trait = '(item_trait (ident) @symbol)'
