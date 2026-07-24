@@ -21,6 +21,10 @@ method = [
 ]
 type = '(type_definition declarator: (type_identifier) @symbol)'
 
+[css]
+class = '(rule_set (selectors (class_selector . (class_name)) @symbol))'
+id = '(rule_set (selectors (id_selector . (id_name)) @symbol))'
+
 [fish]
 alias = '(command name: _ @command (#eq? @command "alias") . argument: _ @symbol)'
 function = '(function_definition name: _ @symbol)'

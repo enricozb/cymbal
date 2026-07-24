@@ -18,6 +18,10 @@
       url = "github:tree-sitter/tree-sitter-cpp";
       flake = false;
     };
+    tree-sitter-css = {
+      url = "github:tree-sitter/tree-sitter-css";
+      flake = false;
+    };
     tree-sitter-fish = {
       url = "github:ram02z/tree-sitter-fish";
       flake = false;
@@ -91,6 +95,7 @@
       trix,
       tree-sitter-c,
       tree-sitter-cpp,
+      tree-sitter-css,
       tree-sitter-fish,
       tree-sitter-go,
       tree-sitter-haskell,
@@ -136,6 +141,7 @@
             src = tree-sitter-cpp;
             npmDepsHash = "sha256-e+LlXgdzNWJsZY4SkStOnyc1V8kngFColbF5tfVVg/8=";
           };
+          css.src = tree-sitter-css;
           fish.src = tree-sitter-fish;
           go.src = tree-sitter-go;
           haskell.src = tree-sitter-haskell;

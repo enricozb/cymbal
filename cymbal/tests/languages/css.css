@@ -1,0 +1,44 @@
+/* just a class */
+.button {
+  color: red;
+}
+
+/* just an id */
+#header {
+  color: blue;
+}
+
+/* not just a class: element with class */
+div.card {
+  color: green;
+}
+
+/* not just an id: element with id */
+main#content {
+  color: purple;
+}
+
+/* multiple selectors: should not match */
+.foo, .bar {
+  color: orange;
+}
+
+/* element selector: should not match */
+body {
+  margin: 0;
+}
+
+/* nested compound: should not match */
+.wrapper .inner {
+  padding: 1em;
+}
+
+/* another simple class */
+.footer {
+  font-size: 12px;
+}
+
+/* another simple id */
+#sidebar {
+  width: 200px;
+}

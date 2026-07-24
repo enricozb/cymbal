@@ -196,6 +196,8 @@ pub enum Language {
   C,
   #[assoc(to_str = "c++ ", color = BLUE, from_extension = "cpp" | "cc" | "hpp" | "hh")]
   CPP,
+  #[assoc(to_str = "css ", color = MAGENTA, from_extension = "css")]
+  CSS,
   #[assoc(to_str = "fish", color = GREEN, from_extension = "fish")]
   Fish,
   #[assoc(to_str = "go  ", color = CYAN, from_extension = "go")]

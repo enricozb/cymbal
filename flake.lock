@@ -79,6 +79,7 @@
         "nixpkgs": "nixpkgs",
         "tree-sitter-c": "tree-sitter-c",
         "tree-sitter-cpp": "tree-sitter-cpp",
+        "tree-sitter-css": "tree-sitter-css",
         "tree-sitter-fish": "tree-sitter-fish",
         "tree-sitter-go": "tree-sitter-go",
         "tree-sitter-haskell": "tree-sitter-haskell",
@@ -158,6 +159,22 @@
       "original": {
         "owner": "tree-sitter",
         "repo": "tree-sitter-cpp",
+        "type": "github"
+      }
+    },
+    "tree-sitter-css": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1759059266,
+        "narHash": "sha256-jFsnEyS+FThk7L48FzAdSp5fNPSLvM8hTL/VC5FMlOE=",
+        "owner": "tree-sitter",
+        "repo": "tree-sitter-css",
+        "rev": "dda5cfc5722c429eaba1c910ca32c2c0c5bb1a3f",
+        "type": "github"
+      },
+      "original": {
+        "owner": "tree-sitter",
+        "repo": "tree-sitter-css",
         "type": "github"
       }
     },

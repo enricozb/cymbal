@@ -52,6 +52,8 @@ pub enum Kind {
   Constant,
   #[assoc(to_str = "define ", color = YELLOW)]
   Define,
+  #[assoc(to_str = "id     ", color = YELLOW)]
+  Id,
 
   #[assoc(to_str = "class  ", color = CYAN)]
   Class,

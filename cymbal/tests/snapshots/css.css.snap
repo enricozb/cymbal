@@ -1,0 +1,6 @@
+[35mcss [0m [36mclass  [0m tests/languages/css.css 2 1  .button 
+[35mcss [0m [36mclass  [0m tests/languages/css.css 22 1  .foo 
+[35mcss [0m [36mclass  [0m tests/languages/css.css 22 7  .bar 
+[35mcss [0m [36mclass  [0m tests/languages/css.css 37 1  .footer 
+[35mcss [0m [33mid     [0m tests/languages/css.css 7 1  #header 
+[35mcss [0m [33mid     [0m tests/languages/css.css 42 1  #sidebar 
