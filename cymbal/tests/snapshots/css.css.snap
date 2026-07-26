@@ -1,6 +1,11 @@
-[35mcss [0m [36mclass  [0m tests/languages/css.css 2 1  .button 
-[35mcss [0m [36mclass  [0m tests/languages/css.css 22 1  .foo 
-[35mcss [0m [36mclass  [0m tests/languages/css.css 22 7  .bar 
-[35mcss [0m [36mclass  [0m tests/languages/css.css 37 1  .footer 
-[35mcss [0m [33mid     [0m tests/languages/css.css 7 1  #header 
-[35mcss [0m [33mid     [0m tests/languages/css.css 42 1  #sidebar 
+[35mcss [0m [36mclass  [0m tests/languages/css.css 9 1  .theme 
+[35mcss [0m [36mclass  [0m tests/languages/css.css 19 1  .button 
+[35mcss [0m [36mclass  [0m tests/languages/css.css 39 1  .foo 
+[35mcss [0m [36mclass  [0m tests/languages/css.css 39 7  .bar 
+[35mcss [0m [36mclass  [0m tests/languages/css.css 54 1  .footer 
+[35mcss [0m [33mid     [0m tests/languages/css.css 24 1  #header 
+[35mcss [0m [33mid     [0m tests/languages/css.css 59 1  #sidebar 
+[35mcss [0m [35mvar    [0m tests/languages/css.css 3 3  --primary-color 
+[35mcss [0m [35mvar    [0m tests/languages/css.css 4 3  --spacing 
+[35mcss [0m [35mvar    [0m tests/languages/css.css 65 3  --radius 
+[35mcss [0m [35mvar    [0m tests/languages/css.css 71 5  --nested 

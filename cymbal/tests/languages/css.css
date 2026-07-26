@@ -1,3 +1,20 @@
+/* variable declarations in :root */
+:root {
+  --primary-color: #333;
+  --spacing: 8px;
+  color: black;
+}
+
+/* not :root: should not match */
+.theme {
+  --secondary-color: #eee;
+}
+
+/* not just :root: should not match */
+html:root {
+  --ignored: 1px;
+}
+
 /* just a class */
 .button {
   color: red;
@@ -41,4 +58,16 @@ body {
 /* another simple id */
 #sidebar {
   width: 200px;
+}
+
+/* more root variables */
+:root {
+  --radius: 4px;
+}
+
+/* nested inside a media query */
+@media (min-width: 600px) {
+  :root {
+    --nested: 10px;
+  }
 }

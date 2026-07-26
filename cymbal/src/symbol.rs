@@ -81,6 +81,8 @@ pub enum Kind {
   Impl,
   #[assoc(to_str = "field  ", color = MAGENTA)]
   Field,
+  #[assoc(to_str = "var    ", color = MAGENTA)]
+  Variable,
 
   #[assoc(to_str = "variant", color = GREEN)]
   Variant,

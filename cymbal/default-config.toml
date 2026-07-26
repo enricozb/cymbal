@@ -24,6 +24,14 @@ type = '(type_definition declarator: (type_identifier) @symbol)'
 [css]
 class = '(rule_set (selectors (class_selector . (class_name)) @symbol))'
 id = '(rule_set (selectors (id_selector . (id_name)) @symbol))'
+variable = '''
+  (rule_set
+    (selectors (pseudo_class_selector . (class_name) @_root))
+    (block (declaration (property_name) @symbol))
+    (#eq? @_root "root")
+    (#match? @symbol "^--")
+  )
+'''
 
 [fish]
 alias = '(command name: _ @command (#eq? @command "alias") . argument: _ @symbol)'
