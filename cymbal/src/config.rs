@@ -36,12 +36,12 @@ impl Config {
     self.languages.contains_key(&language)
   }
 
-  pub fn for_language(self, language: Language) -> Self {
+  pub fn for_languages(self, languages: &[Language]) -> Self {
     Self {
       languages: self
         .languages
         .into_iter()
-        .filter(|(config_lang, _)| config_lang == &language)
+        .filter(|(config_lang, _)| languages.contains(config_lang))
         .collect(),
     }
   }

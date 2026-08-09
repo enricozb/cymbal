@@ -59,15 +59,17 @@ pub struct Args {
 
   /// Only show symbols from files with extensions matching this language.
   ///
-  /// This flag takes precedence over the `--extension` flag.
+  /// Can be passed multiple times to match multiple languages. Languages
+  /// matched by the `--extension` flag are also included.
   #[arg(long)]
-  language: Option<Language>,
+  language: Vec<Language>,
 
   /// Only show symbols from files with the language matching this extension.
   ///
-  /// The `--language` flag takes precedence over this flag.
+  /// Can be passed multiple times to match multiple extensions. Languages
+  /// matched by the `--language` flag are also included.
   #[arg(long)]
-  extension: Option<String>,
+  extension: Vec<String>,
 
   /// Directory to cache parsed symbols.
   ///
@@ -118,8 +120,8 @@ impl Args {
       Config::default()
     };
 
-    if let Some(language) = self.language() {
-      config.for_language(language).ok()
+    if let Some(languages) = self.languages() {
+      config.for_languages(&languages).ok()
     } else {
       config.ok()
     }
@@ -158,11 +160,14 @@ impl Args {
 
   /// Whether additional restrictions on the set of walked files are present.
   pub fn is_filtering(&self) -> bool {
-    self.search_path.is_file() || self.language().is_some()
+    self.search_path.is_file() || self.languages().is_some()
   }
 
-  fn language(&self) -> Option<Language> {
-    self.language.or(self.extension.as_deref().and_then(Language::from_extension))
+  fn languages(&self) -> Option<Vec<Language>> {
+    let extensions = self.extension.iter().filter_map(|extension| Language::from_extension(extension));
+    let languages: Vec<Language> = self.language.iter().copied().chain(extensions).collect();
+
+    (!languages.is_empty()).then_some(languages)
   }
 }
 
