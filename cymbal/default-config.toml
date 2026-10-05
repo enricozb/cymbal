@@ -275,3 +275,6 @@ enum = '(enum_declaration name: (identifier) @symbol enum_body: (enum_body))'
 type = '(type_declaration name: (identifier) @symbol)'
 global = '(program (var_declaration declarators: (var_declarators (var name: (identifier) @symbol))))'
 macro = '(macroexp_statement name: (identifier) @symbol body: (macroexp_body (return_statement)))'
+
+[typst]
+function = '(let_binding name: (identifier) @symbol parameters: (parameters))'

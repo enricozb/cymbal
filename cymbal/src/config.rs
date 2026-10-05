@@ -232,6 +232,8 @@ pub enum Language {
   Teal,
   #[assoc(to_str = "nu  ", color = BLUE, from_extension = "nu")]
   Nu,
+  #[assoc(to_str = "typ ", color = BLUE, from_extension = "typ")]
+  Typst,
 }
 
 languages_impl!(Language);

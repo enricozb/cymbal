@@ -94,6 +94,7 @@
         "tree-sitter-rust": "tree-sitter-rust",
         "tree-sitter-teal": "tree-sitter-teal",
         "tree-sitter-typescript": "tree-sitter-typescript",
+        "tree-sitter-typst": "tree-sitter-typst",
         "tree-sitter-vine": "tree-sitter-vine",
         "trix": "trix"
       }
@@ -399,6 +400,22 @@
       "original": {
         "owner": "tree-sitter",
         "repo": "tree-sitter-typescript",
+        "type": "github"
+      }
+    },
+    "tree-sitter-typst": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1785266679,
+        "narHash": "sha256-zNj+JfEHrGyKaLMbs7Erv3l85PH7GFdc8/0Txpoz9Po=",
+        "owner": "SeniorMars",
+        "repo": "tree-sitter-typst",
+        "rev": "1acd48c90d260bc9f8a99f903d3e2a8031bc7aae",
+        "type": "github"
+      },
+      "original": {
+        "owner": "SeniorMars",
+        "repo": "tree-sitter-typst",
         "type": "github"
       }
     },
