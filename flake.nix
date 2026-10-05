@@ -10,16 +10,16 @@
     };
 
     trix.url = "github:enricozb/trix";
-    tree-sitter-c = {
-      url = "github:tree-sitter/tree-sitter-c";
-      flake = false;
-    };
     tree-sitter-cpp = {
       url = "github:tree-sitter/tree-sitter-cpp";
       flake = false;
     };
     tree-sitter-css = {
       url = "github:tree-sitter/tree-sitter-css";
+      flake = false;
+    };
+    tree-sitter-c = {
+      url = "github:tree-sitter/tree-sitter-c";
       flake = false;
     };
     tree-sitter-fish = {
@@ -32,6 +32,26 @@
     };
     tree-sitter-haskell = {
       url = "github:tree-sitter-grammars/tree-sitter-haskell";
+      flake = false;
+    };
+    tree-sitter-javascript = {
+      url = "github:tree-sitter/tree-sitter-javascript";
+      flake = false;
+    };
+    tree-sitter-json = {
+      url = "github:tree-sitter/tree-sitter-json";
+      flake = false;
+    };
+    tree-sitter-kak = {
+      url = "github:saifulapm/tree-sitter-kakscript";
+      flake = false;
+    };
+    tree-sitter-lua = {
+      url = "github:tree-sitter-grammars/tree-sitter-lua";
+      flake = false;
+    };
+    tree-sitter-nu = {
+      url = "github:nushell/tree-sitter-nu";
       flake = false;
     };
     tree-sitter-ocaml = {
@@ -50,36 +70,16 @@
       url = "github:tree-sitter/tree-sitter-rust";
       flake = false;
     };
-    tree-sitter-javascript = {
-      url = "github:tree-sitter/tree-sitter-javascript";
+    tree-sitter-teal = {
+      url = "github:euclidianAce/tree-sitter-teal";
       flake = false;
     };
     tree-sitter-typescript = {
       url = "github:tree-sitter/tree-sitter-typescript";
       flake = false;
     };
-    tree-sitter-json = {
-      url = "github:tree-sitter/tree-sitter-json";
-      flake = false;
-    };
     tree-sitter-vine = {
       url = "github:VineLang/vine";
-      flake = false;
-    };
-    tree-sitter-kak = {
-      url = "github:saifulapm/tree-sitter-kakscript";
-      flake = false;
-    };
-    tree-sitter-lua = {
-      url = "github:tree-sitter-grammars/tree-sitter-lua";
-      flake = false;
-    };
-    tree-sitter-teal = {
-      url = "github:euclidianAce/tree-sitter-teal";
-      flake = false;
-    };
-    tree-sitter-nu = {
-      url = "github:nushell/tree-sitter-nu";
       flake = false;
     };
   };
@@ -136,15 +136,21 @@
             filter = path: type: (craneLib.filterCargoSources path type) || (extraFilter path);
           };
         grammar-srcs = {
-          c.src = tree-sitter-c;
           cpp = {
             src = tree-sitter-cpp;
             npmDepsHash = "sha256-e+LlXgdzNWJsZY4SkStOnyc1V8kngFColbF5tfVVg/8=";
           };
+          c.src = tree-sitter-c;
           css.src = tree-sitter-css;
           fish.src = tree-sitter-fish;
           go.src = tree-sitter-go;
           haskell.src = tree-sitter-haskell;
+          ivy.src = "${tree-sitter-vine}/lsp/tree-sitter-ivy";
+          javascript.src = tree-sitter-javascript;
+          json.src = tree-sitter-json;
+          kak.src = tree-sitter-kak;
+          lua.src = tree-sitter-lua;
+          nu.src = tree-sitter-nu;
           ocaml = {
             src = tree-sitter-ocaml;
             filter = [ "ocaml" ];
@@ -152,19 +158,13 @@
           odin.src = tree-sitter-odin;
           python.src = tree-sitter-python;
           rust.src = tree-sitter-rust;
-          javascript.src = tree-sitter-javascript;
+          teal.src = tree-sitter-teal;
           typescript = {
             src = tree-sitter-typescript;
             filter = [ "tsx" ];
             npmDepsHash = "sha256-C377bZ1ikMpwXD2LvEp01/a37GOh5FT0fUj8DKdTYyw=";
           };
-          json.src = tree-sitter-json;
-          ivy.src = "${tree-sitter-vine}/lsp/tree-sitter-ivy";
           vine.src = "${tree-sitter-vine}/lsp/tree-sitter-vine";
-          kak.src = tree-sitter-kak;
-          lua.src = tree-sitter-lua;
-          teal.src = tree-sitter-teal;
-          nu.src = tree-sitter-nu;
         };
         trixLib = trix.mkLib pkgs grammar-srcs;
       in
