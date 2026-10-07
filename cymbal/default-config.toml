@@ -10,7 +10,7 @@ enum = '(enum_specifier name: (type_identifier) @symbol)'
 union = '(union_specifier name: (type_identifier) @symbol)'
 class = [
   '(struct_specifier name: (type_identifier) @symbol body:(_))',
-  '(class_specifier name: (type_identifier) @symbol)',
+  '(class_specifier name: (type_identifier) @symbol body:(_))',
 ]
 function = [
   '(function_declarator declarator: (identifier) @symbol)',

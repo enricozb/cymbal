@@ -15,6 +15,8 @@ struct Vec2 {
   double y;
 };
 
+class ForwardDecl;
+
 class Shape {
 public:
   virtual ~Shape() = default;
